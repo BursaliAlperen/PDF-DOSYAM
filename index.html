@@ -123,7 +123,7 @@
     <div class="sidebar" id="sidebar">
         <h3 style="margin-bottom:20px; color:var(--primary);">Kategoriler</h3>
         <div style="flex:1; overflow-y:auto;" id="sb-list"></div>
-        <div style="margin-top:20px; text-align:center; font-size:12px; color:var(--text-sub);">v9.2 SafeUser</div>
+        <div style="margin-top:20px; text-align:center; font-size:12px; color:var(--text-sub);">v9.4 Live</div>
     </div>
 
     <!-- HEADER -->
@@ -257,7 +257,7 @@
             <div style="background:#F1F5F9; padding:10px; border-radius:12px; margin-bottom:15px;">
                 <h5 style="margin-bottom:5px;">Yeni Ekle</h5>
                 <input id="ap-l" class="inp" style="font-size:12px;" placeholder="Link (Otomatik Düzeltme)" oninput="autoDetect(this.value)">
-                <input id="ap-n" class="inp" style="font-size:12px;" placeholder="Kitap Adı">
+                <input id="ap-n" class="inp" style="font-size:12px;" placeholder="Kitap Adı" oninput="liveCatDetect(this.value)">
                 <input id="ap-c" class="inp" style="font-size:12px;" placeholder="Kategoriler (Otomatik)">
                 <input id="ap-ads" class="inp" style="font-size:12px;" type="number" placeholder="Reklam Sayısı">
                 <button class="btn" style="padding:10px;" id="btn-add-pdf" onclick="addPdf()">Ekle</button>
@@ -299,13 +299,13 @@
     <script>
         // CONFIG
         const CFG = {
-            apiKey: "AIzaSyDxxxxxxxxx", 
-            authDomain: "proje.firebaseapp.com",
-            databaseURL: "https://proje-default-rtdb.firebaseio.com",
-            projectId: "proje",
-            storageBucket: "proje.appspot.com",
-            messagingSenderId: "123",
-            appId: "1:123:web:abc"
+            apiKey: "AIzaSyDCR9nLVp57rZjR5cZSin1Mc311xiJNMvc",
+            authDomain: "pdfdosyam-2def4.firebaseapp.com",
+            projectId: "pdfdosyam-2def4",
+            storageBucket: "pdfdosyam-2def4.firebasestorage.app",
+            messagingSenderId: "155894000586",
+            appId: "1:155894000586:web:a9011fbb6cdadc5a793d33",
+            measurementId: "G-ZHW0QCG469"
         };
         const ADMIN_IDS = [7904032877, 8392479231];
         const CATS = [
@@ -333,17 +333,13 @@
 
         firebase.initializeApp(CFG);
         const db = firebase.firestore();
+        // PERSISTENCE (VERİ KAYBI ÖNLEME)
+        db.enablePersistence().catch(err => { console.log("Persistence disabled:", err.code); });
+
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // ** GÜVENLİK DÜZELTMESİ **
-        // Tarayıcıdan girenleri 'Misafir' yap, Admin yetkisini kaldır.
-        let user = tg.initDataUnsafe.user || {
-            id: 0, 
-            first_name: "Misafir", 
-            last_name: ""
-        };
-        
+        let user = tg.initDataUnsafe.user || { id: 0, first_name: "Misafir", last_name: "" };
         let pdfs=[], selPdf=null, globalReqAds=3, currentAdStep=0;
 
         window.onload = () => {
@@ -356,7 +352,16 @@
             }
             
             db.collection("settings").doc("config").onSnapshot(doc => { if(doc.exists()) globalReqAds = doc.data().reqAds || 3; });
-            db.collection("pdfs").orderBy("name").onSnapshot(snap => { pdfs=[]; snap.forEach(doc => pdfs.push({k:doc.id, ...doc.data()})); renderPdfs('all'); });
+            
+            // PDF DİNLEME (HATA YAKALAMALI)
+            db.collection("pdfs").orderBy("date", "desc").onSnapshot(snap => { 
+                pdfs=[]; 
+                snap.forEach(doc => pdfs.push({k:doc.id, ...doc.data()})); 
+                renderPdfs('all'); 
+            }, (error) => {
+                console.error("Veri çekme hatası:", error);
+                document.getElementById('pdf-list').innerHTML = `<div style="grid-column:1/-1; padding:20px; color:red; text-align:center;">Bağlantı Hatası!<br>${error.message}</div>`;
+            });
 
             // DUYURU MARQUEE
             db.collection("notifications").orderBy("date", "desc").limit(1).onSnapshot(snap => {
@@ -377,7 +382,6 @@
                     document.getElementById('home-cat-grid').innerHTML += `<div class="cat-item" onclick="filter('${c.n}')"><div class="cat-icon"><i class="fa-solid ${c.i}"></i></div><div style="font-weight:600; font-size:14px;">${c.n}</div></div>`;
                 }
             });
-            showToast("Veriler güncellendi.");
         };
 
         function go(viewId, el) {
@@ -553,7 +557,6 @@
 
         // --- AKILLI SÖZLÜK (KAPSAMLI) ---
         function processText(raw) {
-            // Bozuk karakterleri ve yaygın hataları düzelt
             const corrections = [
                 { p: /t[uü\-_]*rk[cç\-_]*e?/i, r: "Türkçe" }, { p: /trk[cç\-_]*e?/i, r: "Türkçe" }, 
                 { p: /mat[e]*mat[i]*k/i, r: "Matematik" }, { p: /geo[metri]*/i, r: "Geometri" }, 
@@ -572,12 +575,10 @@
                 { p: /s[iı\-_]n[iı\-_]f/i, r: "Sınıf" }, { p: /yapra[kğ\-_]*/i, r: "Yaprak" },
                 { p: /test/i, r: "Test" }, { p: /co[zö\-_]*[uü\-_]*m/i, r: "Çözüm" }
             ];
-
-            let words = raw.split(/[\s_\-]+/); // Boşluk, alt çizgi veya tire ile ayır
+            let words = raw.split(/[\s_\-]+/);
             let correctedWords = words.map(w => {
                 if(!w) return "";
                 for(let c of corrections) { if(c.p.test(w)) return c.r; }
-                // Baş harfi büyüt
                 return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
             });
             return correctedWords.filter(w => w.length > 0).join(' ');
@@ -594,7 +595,6 @@
                 } 
             });
             
-            // Özel Eklemeler (Coğrafya Regex ile düzeldiyse bile kategoriye ekle)
             if((cleanName.includes("Coğrafya") || /cog/i.test(cleanName)) && !detectedCats.includes("Coğrafya")) detectedCats.push("Coğrafya");
             if(cleanName.includes("Geometri") && !detectedCats.includes("Geometri")) detectedCats.push("Geometri");
 
@@ -602,20 +602,16 @@
             return detectedCats.join(', ');
         }
 
-        // Linkten Otomatik Doldurma
         function autoDetect(url) {
             let filename = ""; try { filename = decodeURIComponent(url.split('?')[0].split('/').pop()); } catch(e){ return; }
-            let raw = filename.replace(/\.pdf$/i, ''); // Uzantıyı at
-            
+            let raw = filename.replace(/\.pdf$/i, ''); 
             let cleanName = processText(raw);
             let cats = detectCats(cleanName);
-
             document.getElementById('ap-n').value = cleanName;
             document.getElementById('ap-c').value = cats;
             showToast("Otomatik düzeltme uygulandı.");
         }
 
-        // İsim Değişince Kategori Güncelleme (Canlı)
         function liveCatDetect(val) {
             let cats = detectCats(val);
             document.getElementById('ap-c').value = cats;
