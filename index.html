@@ -8,7 +8,7 @@
     <!-- 1. Telegram SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
     
-    <!-- 2. REKLAM SDK -->
+    <!-- 2. REKLAM SDK (Interstitial - Tam Ekran) -->
     <script src="https://js.onclckvd.com/in-stream-ad-admanager/tma.js"></script>
     
     <!-- Firebase -->
@@ -123,7 +123,7 @@
     <div class="sidebar" id="sidebar">
         <h3 style="margin-bottom:20px; color:var(--primary);">Kategoriler</h3>
         <div style="flex:1; overflow-y:auto;" id="sb-list"></div>
-        <div style="margin-top:20px; text-align:center; font-size:12px; color:var(--text-sub);">v8.6 SaveFix</div>
+        <div style="margin-top:20px; text-align:center; font-size:12px; color:var(--text-sub);">v9.2 SafeUser</div>
     </div>
 
     <!-- HEADER -->
@@ -167,7 +167,6 @@
     <div id="v-pdfs" class="view">
         <h2 style="margin-bottom:15px;" id="lib-title">Tüm Kitaplar</h2>
         <input class="inp" placeholder="🔍 Kitap veya yazar ara..." id="search" oninput="render()">
-        
         <div id="pdf-list" class="pdf-grid">
             <div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-sub);">Yükleniyor...</div>
         </div>
@@ -337,15 +336,25 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        let user = tg.initDataUnsafe.user || {id: 7904032877, first_name: "Admin", last_name: "Test"};
+        // ** GÜVENLİK DÜZELTMESİ **
+        // Tarayıcıdan girenleri 'Misafir' yap, Admin yetkisini kaldır.
+        let user = tg.initDataUnsafe.user || {
+            id: 0, 
+            first_name: "Misafir", 
+            last_name: ""
+        };
+        
         let pdfs=[], selPdf=null, globalReqAds=3, currentAdStep=0;
 
         window.onload = () => {
             document.getElementById('u-name').innerText = user.first_name;
             if(ADMIN_IDS.includes(user.id)) document.getElementById('nav-admin').style.display = 'flex';
 
-            db.collection("users").doc(String(user.id)).set({ name: user.first_name, last: Date.now() }, {merge: true});
-            db.collection("users").doc(String(user.id)).onSnapshot(doc => { if(doc.exists) document.getElementById('my-ad-stat').innerText = doc.data().adCount || 0; });
+            if(user.id !== 0) {
+                db.collection("users").doc(String(user.id)).set({ name: user.first_name, last: Date.now() }, {merge: true});
+                db.collection("users").doc(String(user.id)).onSnapshot(doc => { if(doc.exists) document.getElementById('my-ad-stat').innerText = doc.data().adCount || 0; });
+            }
+            
             db.collection("settings").doc("config").onSnapshot(doc => { if(doc.exists()) globalReqAds = doc.data().reqAds || 3; });
             db.collection("pdfs").orderBy("name").onSnapshot(snap => { pdfs=[]; snap.forEach(doc => pdfs.push({k:doc.id, ...doc.data()})); renderPdfs('all'); });
 
@@ -518,7 +527,9 @@
         }
 
         function completeAdStep() {
-            currentAdStep++; db.collection("stats").doc("ads").set({ count: firebase.firestore.FieldValue.increment(1) }, {merge:true}); db.collection("users").doc(String(user.id)).set({ adCount: firebase.firestore.FieldValue.increment(1) }, {merge:true}); showToast("İşlem tamamlandı, adım kaydedildi."); updateUnlockUI();
+            currentAdStep++; db.collection("stats").doc("ads").set({ count: firebase.firestore.FieldValue.increment(1) }, {merge:true}); 
+            if(user.id !== 0) db.collection("users").doc(String(user.id)).set({ adCount: firebase.firestore.FieldValue.increment(1) }, {merge:true}); 
+            showToast("İşlem tamamlandı, adım kaydedildi."); updateUnlockUI();
         }
 
         function renderNotifications() {
@@ -540,13 +551,14 @@
             showToast("İstatistikler güncellendi");
         }
 
-        function autoDetect(url) {
-            let filename = ""; try { filename = decodeURIComponent(url.split('?')[0].split('/').pop()); } catch(e){ return; }
-            let raw = filename.replace(/\.pdf$/i, '').replace(/_/g, ' ').replace(/-/g, ' ');
+        // --- AKILLI SÖZLÜK (KAPSAMLI) ---
+        function processText(raw) {
+            // Bozuk karakterleri ve yaygın hataları düzelt
             const corrections = [
-                { p: /t[uü\-_]*rk[cç\-_]*e?/i, r: "Türkçe" }, { p: /trk[cç\-_]*e?/i, r: "Türkçe" }, { p: /mat[e]*mat[i]*k/i, r: "Matematik" },
-                { p: /geo[metri]*/i, r: "Geometri" }, { p: /fiz[ik]*/i, r: "Fizik" },
-                { p: /kim[ya]*/i, r: "Kimya" }, { p: /biy[oloja]*/i, r: "Biyoloji" }, { p: /bio/i, r: "Biyoloji" },
+                { p: /t[uü\-_]*rk[cç\-_]*e?/i, r: "Türkçe" }, { p: /trk[cç\-_]*e?/i, r: "Türkçe" }, 
+                { p: /mat[e]*mat[i]*k/i, r: "Matematik" }, { p: /geo[metri]*/i, r: "Geometri" }, 
+                { p: /fiz[ik]*/i, r: "Fizik" }, { p: /kim[ya]*/i, r: "Kimya" }, 
+                { p: /biy[oloja]*/i, r: "Biyoloji" }, { p: /bio/i, r: "Biyoloji" },
                 { p: /edeb[iyat]*/i, r: "Edebiyat" }, { p: /tar[ih]*/i, r: "Tarih" },
                 { p: /cog[rafy]*/i, r: "Coğrafya" }, { p: /co[gğ\-_]*raf[ya]*/i, r: "Coğrafya" },
                 { p: /fel[sefa]*/i, r: "Felsefe" }, { p: /din/i, r: "Din" },
@@ -556,24 +568,57 @@
                 { p: /fas[ikül]*/i, r: "Fasikül" }, { p: /den[eme]*/i, r: "Deneme" },
                 { p: /par[agraf]*/i, r: "Paragraf" }, { p: /prob[lem]*/i, r: "Problemler" },
                 { p: /yildizlar/i, r: "Yıldızlar" }, { p: /ligi/i, r: "Ligi" },
-                { p: /ayd[iı\-_]*n/i, r: "Aydın" }, { p: /h[iı\-_]*z/i, r: "Hız" }, { p: /eis/i, r: "Eis" }
+                { p: /ayd[iı\-_]*n/i, r: "Aydın" }, { p: /h[iı\-_]*z/i, r: "Hız" }, { p: /eis/i, r: "Eis" },
+                { p: /s[iı\-_]n[iı\-_]f/i, r: "Sınıf" }, { p: /yapra[kğ\-_]*/i, r: "Yaprak" },
+                { p: /test/i, r: "Test" }, { p: /co[zö\-_]*[uü\-_]*m/i, r: "Çözüm" }
             ];
-            let words = raw.split(' ');
+
+            let words = raw.split(/[\s_\-]+/); // Boşluk, alt çizgi veya tire ile ayır
             let correctedWords = words.map(w => {
                 if(!w) return "";
                 for(let c of corrections) { if(c.p.test(w)) return c.r; }
+                // Baş harfi büyüt
                 return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
             });
-            let cleanName = correctedWords.filter(w => w.length > 0).join(' ');
+            return correctedWords.filter(w => w.length > 0).join(' ');
+        }
+
+        function detectCats(cleanName) {
             let detectedCats = [];
             if(/tyt/i.test(cleanName)) detectedCats.push("TYT");
             if(/ayt/i.test(cleanName)) detectedCats.push("AYT");
-            CATS.forEach(c => { if(c.n !== "TYT" && c.n !== "AYT") { if(cleanName.includes(c.n)) detectedCats.push(c.n); } });
-            if(cleanName.includes("Coğrafya") && !detectedCats.includes("Coğrafya")) detectedCats.push("Coğrafya");
+            
+            CATS.forEach(c => { 
+                if(c.n !== "TYT" && c.n !== "AYT") { 
+                    if(cleanName.includes(c.n)) detectedCats.push(c.n); 
+                } 
+            });
+            
+            // Özel Eklemeler (Coğrafya Regex ile düzeldiyse bile kategoriye ekle)
+            if((cleanName.includes("Coğrafya") || /cog/i.test(cleanName)) && !detectedCats.includes("Coğrafya")) detectedCats.push("Coğrafya");
+            if(cleanName.includes("Geometri") && !detectedCats.includes("Geometri")) detectedCats.push("Geometri");
+
             if(detectedCats.length === 0) detectedCats.push("Diğer");
+            return detectedCats.join(', ');
+        }
+
+        // Linkten Otomatik Doldurma
+        function autoDetect(url) {
+            let filename = ""; try { filename = decodeURIComponent(url.split('?')[0].split('/').pop()); } catch(e){ return; }
+            let raw = filename.replace(/\.pdf$/i, ''); // Uzantıyı at
+            
+            let cleanName = processText(raw);
+            let cats = detectCats(cleanName);
+
             document.getElementById('ap-n').value = cleanName;
-            document.getElementById('ap-c').value = detectedCats.join(', ');
+            document.getElementById('ap-c').value = cats;
             showToast("Otomatik düzeltme uygulandı.");
+        }
+
+        // İsim Değişince Kategori Güncelleme (Canlı)
+        function liveCatDetect(val) {
+            let cats = detectCats(val);
+            document.getElementById('ap-c').value = cats;
         }
         
         function openModal(id){
@@ -596,9 +641,7 @@
             showToast("Pencere kapatıldı"); 
         }
         
-        function renderRequests(){ let d=document.getElementById('adm-req-list'); d.innerHTML=''; db.collection("requests").get().then(snap => { if(snap.empty) d.innerHTML='Yok.'; snap.forEach(doc => { let r=doc.data(); d.innerHTML+=`<div class="list-item"><div><b>${r.book}</b><br><small>${r.name}</small></div><button class="btn btn-dang" style="width:auto; padding:8px; font-size:12px;" onclick="delReq('${doc.id}')">Sil</button></div>`; }); showToast("İstekler listelendi"); }); }
-        function delReq(k){ playClick(); db.collection("requests").doc(k).delete().then(()=>{ renderRequests(); showToast("İstek silindi", "error"); }); }
-        
+        // PDF EKLEME (FIXED)
         function addPdf(){
             playClick();
             const name = document.getElementById('ap-n').value;
@@ -626,6 +669,7 @@
                 renderAdmPdfs(''); 
             }).catch(e => {
                 showToast("Hata oluştu!", "error");
+                console.error(e);
             }).finally(() => {
                 btn.innerText = oldText;
                 btn.disabled = false;
