@@ -42,6 +42,29 @@
         .view.active { display: block; animation: fadeIn 0.3s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* BANNER ALANI */
+        .banner-wrapper {
+            width: 100%;
+            margin: 15px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #F1F5F9;
+            border-radius: 12px;
+            overflow: hidden;
+            min-height: 60px; /* Reklam alanı için yer tutucu */
+            border: 1px dashed #CBD5E1;
+            position: relative;
+        }
+        .banner-label {
+            position: absolute;
+            font-size: 9px;
+            color: #94A3B8;
+            top: 2px;
+            right: 5px;
+            z-index: 0;
+        }
+
         /* TOAST */
         #toast-container { position: fixed; top: 60px; left: 0; width: 100%; z-index: 9999; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
         .toast {
@@ -123,7 +146,7 @@
     <div class="sidebar" id="sidebar">
         <h3 style="margin-bottom:20px; color:var(--primary);">Kategoriler</h3>
         <div style="flex:1; overflow-y:auto;" id="sb-list"></div>
-        <div style="margin-top:20px; text-align:center; font-size:12px; color:var(--text-sub);">v9.4 Live</div>
+        <div style="margin-top:20px; text-align:center; font-size:12px; color:var(--text-sub);">v9.7 BannerMix</div>
     </div>
 
     <!-- HEADER -->
@@ -145,6 +168,9 @@
 
     <!-- 1. HOME VIEW -->
     <div id="v-home" class="view active">
+        <!-- BANNER 1: YENİ KOD (405783) -->
+        <div id="banner-home-top" class="banner-wrapper"></div>
+
         <div class="marquee-container">
             <div class="marquee-content" id="home-marquee-text">Duyurular yükleniyor...</div>
         </div>
@@ -161,6 +187,9 @@
 
         <h4 style="margin-bottom:15px;">Hızlı Erişim</h4>
         <div class="cat-grid" id="home-cat-grid" style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px;"></div>
+        
+        <!-- BANNER 2: ESKİ KOD (6103756) -->
+        <div id="banner-home-bottom" class="banner-wrapper"></div>
     </div>
 
     <!-- 2. PDFS VIEW -->
@@ -175,7 +204,7 @@
     <!-- 3. PROFILE VIEW -->
     <div id="v-profile" class="view">
         <div style="text-align:center; margin:30px 0;">
-            <div style="width:100px; height:100px; border-radius:50%; background:var(--white); margin:0 auto 15px; display:flex; align-items:center; justify-content:center; font-size:40px; color:var(--primary); box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+            <div id="u-avatar-box" style="width:100px; height:100px; border-radius:50%; background:var(--white); margin:0 auto 15px; display:flex; align-items:center; justify-content:center; font-size:40px; color:var(--primary); box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow:hidden;">
                 <i class="fa-solid fa-user-astronaut"></i>
             </div>
             <h3>Profil</h3>
@@ -195,13 +224,16 @@
         <div class="side-item" onclick="openModal('m-user-notifs')" style="background:var(--white); border:1px solid var(--border);">
             <i class="fa-solid fa-bell" style="color:#F59E0B;"></i> <div>Duyurular</div>
         </div>
+
+        <!-- BANNER 3: YENİ KOD (405783) -->
+        <div id="banner-profile" class="banner-wrapper"></div>
     </div>
 
     <!-- 4. ADMIN VIEW -->
     <div id="v-admin" class="view">
         <h2 style="margin-bottom:20px; color:var(--primary);">Yönetici Paneli</h2>
         <div style="background:#1E293B; color:white; padding:20px; border-radius:16px; margin-bottom:15px; text-align:center;">
-            <div style="font-size:12px; opacity:0.7;">TOPLAM İZLENEN REKLAM (GLOBAL)</div>
+            <div style="font-size:12px; opacity:0.7;">TOPLAM İZLENEN REKLAM</div>
             <div style="font-size:28px; font-weight:800; color:#FACC15;" id="st-ads-total">0</div>
         </div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
@@ -277,7 +309,7 @@
             <textarea id="notif-txt" class="txtarea" placeholder="Yeni duyuru yaz..."></textarea>
             <button class="btn" onclick="sendNotification()">Yayınla</button>
             <div style="margin:15px 0; border-top:1px solid var(--border); padding-top:10px; text-align:left;">
-                <h5 style="margin-bottom:10px; color:var(--text-sub);">Aktif Duyurular (Silmek için tıkla)</h5>
+                <h5 style="margin-bottom:10px; color:var(--text-sub);">Aktif Duyurular</h5>
                 <div id="adm-notif-list" style="max-height:150px; overflow-y:auto;"></div>
             </div>
             <button class="btn btn-sec" style="margin-top:5px;" onclick="closeM()">Kapat</button>
@@ -301,6 +333,7 @@
         const CFG = {
             apiKey: "AIzaSyDCR9nLVp57rZjR5cZSin1Mc311xiJNMvc",
             authDomain: "pdfdosyam-2def4.firebaseapp.com",
+            databaseURL: "https://proje-default-rtdb.firebaseio.com",
             projectId: "pdfdosyam-2def4",
             storageBucket: "pdfdosyam-2def4.firebasestorage.app",
             messagingSenderId: "155894000586",
@@ -316,26 +349,46 @@
             {n:"TYT", i:"fa-check"}, {n:"AYT", i:"fa-list-check"}
         ];
 
-        // --- SES ---
         const realClick = new Audio("https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3");
         function playClick() { realClick.currentTime = 0; realClick.volume = 0.4; realClick.play().catch(() => {}); }
 
-        // --- INTERSTITIAL REKLAM INIT ---
         window.showAdFn = null;
         document.addEventListener('DOMContentLoaded', () => {
             showToast("Uygulama Hazır!");
             if(window.initCdTma) {
                 window.initCdTma({ id: 6103736 }).then(show => { window.showAdFn = show; console.log("Int. Reklam Servisi Aktif"); }).catch(e => { console.error("Reklam Başlatma Hatası:", e); });
-            } else { console.log("Reklam Scripti Yüklenemedi"); }
-            
+            }
             document.querySelectorAll('button, .btn, .nav-item, .side-item, .cat-item, .header-icon-btn').forEach(el => { el.addEventListener('click', playClick); });
+            
+            // İlk açılışta Home bannerlarını yükle
+            loadBanners('home');
         });
+
+        // --- DINAMIK BANNER YUKLEME ---
+        function injectBanner(containerId, pid) {
+            const container = document.getElementById(containerId);
+            if(container) {
+                container.innerHTML = '<div class="banner-label">REKLAM</div>';
+                const s = document.createElement('script');
+                s.async = true;
+                s.src = "https://js.onclckmn.com/static/onclicka.js";
+                s.setAttribute('data-admpid', pid);
+                container.appendChild(s);
+            }
+        }
+
+        function loadBanners(view) {
+            if(view === 'home') {
+                injectBanner('banner-home-top', '405783'); // Yeni Kod
+                injectBanner('banner-home-bottom', '6103756'); // Eski Kod
+            } else if(view === 'profile') {
+                injectBanner('banner-profile', '405783'); // Yeni Kod
+            }
+        }
 
         firebase.initializeApp(CFG);
         const db = firebase.firestore();
-        // PERSISTENCE (VERİ KAYBI ÖNLEME)
         db.enablePersistence().catch(err => { console.log("Persistence disabled:", err.code); });
-
         const tg = window.Telegram.WebApp;
         tg.expand();
 
@@ -345,15 +398,13 @@
         window.onload = () => {
             document.getElementById('u-name').innerText = user.first_name;
             if(ADMIN_IDS.includes(user.id)) document.getElementById('nav-admin').style.display = 'flex';
-
+            if(user.photo_url) document.getElementById('u-avatar-box').innerHTML = `<img src="${user.photo_url}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
             if(user.id !== 0) {
                 db.collection("users").doc(String(user.id)).set({ name: user.first_name, last: Date.now() }, {merge: true});
                 db.collection("users").doc(String(user.id)).onSnapshot(doc => { if(doc.exists) document.getElementById('my-ad-stat').innerText = doc.data().adCount || 0; });
             }
-            
             db.collection("settings").doc("config").onSnapshot(doc => { if(doc.exists()) globalReqAds = doc.data().reqAds || 3; });
             
-            // PDF DİNLEME (HATA YAKALAMALI)
             db.collection("pdfs").orderBy("date", "desc").onSnapshot(snap => { 
                 pdfs=[]; 
                 snap.forEach(doc => pdfs.push({k:doc.id, ...doc.data()})); 
@@ -363,15 +414,10 @@
                 document.getElementById('pdf-list').innerHTML = `<div style="grid-column:1/-1; padding:20px; color:red; text-align:center;">Bağlantı Hatası!<br>${error.message}</div>`;
             });
 
-            // DUYURU MARQUEE
             db.collection("notifications").orderBy("date", "desc").limit(1).onSnapshot(snap => {
                 const marquee = document.getElementById('home-marquee-text');
-                if(!snap.empty) {
-                    let note = snap.docs[0].data().text;
-                    marquee.innerText = "📢 " + note + " 📢 " + note + " 📢 " + note;
-                } else {
-                    marquee.innerText = "Şu an aktif duyuru bulunmamaktadır.";
-                }
+                if(!snap.empty) { let note = snap.docs[0].data().text; marquee.innerText = "📢 " + note + " 📢 " + note + " 📢 " + note; } 
+                else { marquee.innerText = "Şu an aktif duyuru bulunmamaktadır."; }
             });
 
             let ch=''; 
@@ -391,6 +437,8 @@
             const headerActions = document.getElementById('header-actions');
             if(viewId === 'pdfs') { headerActions.style.display = 'flex'; } else { headerActions.style.display = 'none'; }
             if(el) { document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active')); el.classList.add('active'); } 
+            
+            loadBanners(viewId); // Bannerları yükle
             showToast(viewId === 'home' ? 'Ana Sayfa' : viewId === 'pdfs' ? 'Kütüphane' : viewId === 'profile' ? 'Profil' : 'Yönetici Paneli');
         }
 
@@ -411,29 +459,12 @@
         }
         function getPdfIcon(c) { let f=CATS.find(x=>x.n===c); return f?f.i:'fa-file-pdf'; }
 
-        // --- HELPER: KOPYALAMA ---
         function copyText(text) {
-            const el = document.createElement('textarea');
-            el.value = text;
-            document.body.appendChild(el);
-            el.select();
-            document.execCommand('copy');
-            document.body.removeChild(el);
-            showToast("Bağlantı kopyalandı!");
+            const el = document.createElement('textarea'); el.value = text; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); showToast("Bağlantı kopyalandı!");
         }
 
-        // --- HELPER: KİLİT KONTROL ---
-        function isUnlocked(id) {
-            let unlocked = JSON.parse(localStorage.getItem('unlocked_pdfs') || '[]');
-            return unlocked.includes(id);
-        }
-        function setUnlocked(id) {
-            let unlocked = JSON.parse(localStorage.getItem('unlocked_pdfs') || '[]');
-            if(!unlocked.includes(id)) {
-                unlocked.push(id);
-                localStorage.setItem('unlocked_pdfs', JSON.stringify(unlocked));
-            }
-        }
+        function isUnlocked(id) { let unlocked = JSON.parse(localStorage.getItem('unlocked_pdfs') || '[]'); return unlocked.includes(id); }
+        function setUnlocked(id) { let unlocked = JSON.parse(localStorage.getItem('unlocked_pdfs') || '[]'); if(!unlocked.includes(id)) { unlocked.push(id); localStorage.setItem('unlocked_pdfs', JSON.stringify(unlocked)); } }
 
         function renderPdfs(c) {
             let list = document.getElementById('pdf-list'); list.innerHTML = '';
@@ -446,36 +477,38 @@
 
             if(filtered.length === 0) { list.innerHTML = '<div style="grid-column:1/-1; text-align:center; margin-top:40px; color:#94A3B8;">Sonuç yok.</div>'; return; }
             
-            filtered.forEach(p => {
+            let itemCounter = 0;
+            // Listeyi doldurmadan önce tracker
+            let injectedAdIds = [];
+
+            filtered.forEach((p, index) => {
                 let firstCat = p.cat.split(',')[0].trim();
                 let icon = getPdfIcon(firstCat) || 'fa-file-pdf';
                 let dateStr = p.date ? new Date(p.date).toLocaleDateString('tr-TR') : '...';
                 let lockIcon = isUnlocked(p.k) ? 'fa-unlock' : 'fa-lock';
                 let lockColor = isUnlocked(p.k) ? '#10B981' : '#CBD5E1';
 
-                list.innerHTML += `
-                    <div class="pdf-box" onclick="unlockPdf('${p.k}')">
-                        <div class="pdf-thumb"><i class="fa-solid ${icon}"></i></div>
-                        <div class="pdf-title">${p.name}</div>
-                        <div class="pdf-badge">${p.cat}</div>
-                        <div class="pdf-info">
-                            <span><i class="fa-solid fa-download"></i> ${p.downloads || 0}</span>
-                            <span><i class="fa-regular fa-clock"></i> ${dateStr}</span>
-                        </div>
-                        <i class="fa-solid ${lockIcon}" style="position:absolute; top:10px; right:10px; color:${lockColor};"></i>
-                    </div>`;
+                list.innerHTML += `<div class="pdf-box" onclick="unlockPdf('${p.k}')"><div class="pdf-thumb"><i class="fa-solid ${icon}"></i></div><div class="pdf-title">${p.name}</div><div class="pdf-badge">${p.cat}</div><div class="pdf-info"><span><i class="fa-solid fa-download"></i> ${p.downloads || 0}</span><span><i class="fa-regular fa-clock"></i> ${dateStr}</span></div><i class="fa-solid ${lockIcon}" style="position:absolute; top:10px; right:10px; color:${lockColor};"></i></div>`;
+                
+                itemCounter++;
+                // HER 5 KITAPTA BIR BANNER (405783)
+                if(itemCounter % 5 === 0) {
+                    let adId = `ad-list-${index}`;
+                    injectedAdIds.push(adId);
+                    list.innerHTML += `<div class="banner-wrapper" id="${adId}" style="grid-column:1/-1;"></div>`;
+                }
             });
+
+            // Gecikmeli yükleme
+            setTimeout(() => { injectedAdIds.forEach(id => injectBanner(id, '405783')); }, 100);
         }
         function render() { renderPdfs('all'); if(document.getElementById('search').value.length > 2) showToast('Arama yapılıyor...'); }
 
         function unlockPdf(k){ 
-            playClick(); 
-            selPdf = pdfs.find(x=>x.k===k); 
+            playClick(); selPdf = pdfs.find(x=>x.k===k); 
             if(isUnlocked(k)) { currentAdStep = parseInt(selPdf.reqAds || globalReqAds); } else { currentAdStep = 0; }
             if(selPdf.reqAds !== undefined && selPdf.reqAds !== null && selPdf.reqAds !== "") { selPdf.finalReq = parseInt(selPdf.reqAds); } else { selPdf.finalReq = globalReqAds; }
-            updateUnlockUI(); 
-            openModal('m-unlock'); 
-            showToast(selPdf.name + " seçildi");
+            updateUnlockUI(); openModal('m-unlock'); showToast(selPdf.name + " seçildi");
         }
         
         function updateUnlockUI(){
@@ -489,228 +522,42 @@
             
             if(currentAdStep >= req) { 
                 btn.innerHTML = 'LİNKİ KOPYALA'; btn.style.background = '#10B981'; 
-                btn.onclick = () => { 
-                    playClick(); addToHistory(selPdf); setUnlocked(selPdf.k);
-                    db.collection("pdfs").doc(selPdf.k).update({ downloads: firebase.firestore.FieldValue.increment(1) });
-                    copyText(selPdf.link); closeM(); renderPdfs('all'); 
-                }; 
-            } else { 
-                btn.innerHTML = `Reklam İzle`; btn.style.background = ''; btn.onclick = watchAdSequence; 
-            }
+                btn.onclick = () => { playClick(); addToHistory(selPdf); setUnlocked(selPdf.k); db.collection("pdfs").doc(selPdf.k).update({ downloads: firebase.firestore.FieldValue.increment(1) }); copyText(selPdf.link); closeM(); renderPdfs('all'); }; 
+            } else { btn.innerHTML = `Reklam İzle`; btn.style.background = ''; btn.onclick = watchAdSequence; }
         }
 
-        // --- GEÇMİŞ ---
-        function addToHistory(pdf) {
-            let hist = JSON.parse(localStorage.getItem('pdf_history') || '[]');
-            hist = hist.filter(x => x.n !== pdf.name);
-            hist.unshift({ n: pdf.name, l: pdf.link, d: Date.now() });
-            if(hist.length > 20) hist.pop();
-            localStorage.setItem('pdf_history', JSON.stringify(hist));
-        }
-
-        function renderHistory() {
-            let d = document.getElementById('history-list');
-            let hist = JSON.parse(localStorage.getItem('pdf_history') || '[]');
-            d.innerHTML = '';
-            if(hist.length === 0) { d.innerHTML = '<div style="color:#94A3B8;">Henüz indirme yok.</div>'; return; }
-            hist.forEach(h => {
-                d.innerHTML += `<div class="list-item" style="padding:10px; cursor:pointer;" onclick="copyText('${h.l}')"><div><div style="font-weight:600; font-size:13px;">${h.n}</div><div style="font-size:10px; color:#64748B;">${new Date(h.d).toLocaleString('tr-TR')}</div></div><i class="fa-regular fa-copy" style="color:var(--primary);"></i></div>`;
-            });
-        }
-
-        function clearHistory() {
-            playClick();
-            if(confirm('Geçmişi silmek istiyor musunuz?')) {
-                localStorage.removeItem('pdf_history'); renderHistory(); showToast("Geçmiş temizlendi");
-            }
-        }
+        function addToHistory(pdf) { let hist = JSON.parse(localStorage.getItem('pdf_history') || '[]'); hist = hist.filter(x => x.n !== pdf.name); hist.unshift({ n: pdf.name, l: pdf.link, d: Date.now() }); if(hist.length > 20) hist.pop(); localStorage.setItem('pdf_history', JSON.stringify(hist)); }
+        function renderHistory() { let d = document.getElementById('history-list'); let hist = JSON.parse(localStorage.getItem('pdf_history') || '[]'); d.innerHTML = ''; if(hist.length === 0) { d.innerHTML = '<div style="color:#94A3B8;">Henüz indirme yok.</div>'; return; } hist.forEach(h => { d.innerHTML += `<div class="list-item" style="padding:10px; cursor:pointer;" onclick="copyText('${h.l}')"><div><div style="font-weight:600; font-size:13px;">${h.n}</div><div style="font-size:10px; color:#64748B;">${new Date(h.d).toLocaleString('tr-TR')}</div></div><i class="fa-regular fa-copy" style="color:var(--primary);"></i></div>`; }); }
+        function clearHistory() { playClick(); if(confirm('Geçmişi silmek istiyor musunuz?')) { localStorage.removeItem('pdf_history'); renderHistory(); showToast("Geçmiş temizlendi"); } }
 
         function watchAdSequence(){
             playClick(); let btn = document.getElementById('btn-ad'); btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
             if(window.showAdFn) { window.showAdFn().then(() => { completeAdStep(); }).catch(e => { console.log("Hata:", e); showToast("Reklam izlenemedi.", "error"); updateUnlockUI(); }); } else { showToast("Reklam servisi hazır değil.", "error"); updateUnlockUI(); }
         }
+        function completeAdStep() { currentAdStep++; db.collection("stats").doc("ads").set({ count: firebase.firestore.FieldValue.increment(1) }, {merge:true}); if(user.id !== 0) db.collection("users").doc(String(user.id)).set({ adCount: firebase.firestore.FieldValue.increment(1) }, {merge:true}); showToast("İşlem tamamlandı, adım kaydedildi."); updateUnlockUI(); }
 
-        function completeAdStep() {
-            currentAdStep++; db.collection("stats").doc("ads").set({ count: firebase.firestore.FieldValue.increment(1) }, {merge:true}); 
-            if(user.id !== 0) db.collection("users").doc(String(user.id)).set({ adCount: firebase.firestore.FieldValue.increment(1) }, {merge:true}); 
-            showToast("İşlem tamamlandı, adım kaydedildi."); updateUnlockUI();
-        }
+        function renderNotifications() { const list = document.getElementById('user-notif-list'); list.innerHTML = '<div style="text-align:center; color:#CBD5E1;">Yükleniyor...</div>'; db.collection("notifications").orderBy("date", "desc").limit(10).get().then(snap => { list.innerHTML = ''; if(snap.empty) { list.innerHTML = '<div style="text-align:center; color:#94A3B8; margin-top:20px;">Henüz duyuru yok.</div>'; return; } snap.forEach(doc => { let n = doc.data(); let date = new Date(n.date).toLocaleDateString(); list.innerHTML += `<div class="notif-item"><div style="font-weight:700; margin-bottom:5px; font-size:12px; opacity:0.7;">${date}</div>${n.text}</div>`; }); showToast("Duyurular yüklendi"); }); }
+        function sendNotification() { playClick(); let txt = document.getElementById('notif-txt').value; if(!txt) return; db.collection("notifications").add({ text: txt, date: Date.now(), by: user.first_name }).then(() => { showToast("Duyuru yayınlandı!"); document.getElementById('notif-txt').value = ''; renderAdmNotifs(); }); }
 
-        function renderNotifications() {
-            const list = document.getElementById('user-notif-list'); list.innerHTML = '<div style="text-align:center; color:#CBD5E1;">Yükleniyor...</div>';
-            db.collection("notifications").orderBy("date", "desc").limit(10).get().then(snap => {
-                list.innerHTML = ''; if(snap.empty) { list.innerHTML = '<div style="text-align:center; color:#94A3B8; margin-top:20px;">Henüz duyuru yok.</div>'; return; }
-                snap.forEach(doc => { let n = doc.data(); let date = new Date(n.date).toLocaleDateString(); list.innerHTML += `<div class="notif-item"><div style="font-weight:700; margin-bottom:5px; font-size:12px; opacity:0.7;">${date}</div>${n.text}</div>`; }); showToast("Duyurular yüklendi");
-            });
-        }
-        function sendNotification() {
-            playClick(); let txt = document.getElementById('notif-txt').value; if(!txt) return;
-            db.collection("notifications").add({ text: txt, date: Date.now(), by: user.first_name }).then(() => { showToast("Duyuru yayınlandı!"); document.getElementById('notif-txt').value = ''; renderAdmNotifs(); });
-        }
+        function loadStats() { db.collection("users").get().then(s => document.getElementById('st-users').innerText = s.size); document.getElementById('st-pdfs').innerText = pdfs.length; db.collection("stats").doc("ads").onSnapshot(doc => { if(doc.exists) document.getElementById('st-ads-total').innerText = doc.data().count || 0; }); showToast("İstatistikler güncellendi"); }
 
-        function loadStats() {
-            db.collection("users").get().then(s => document.getElementById('st-users').innerText = s.size);
-            document.getElementById('st-pdfs').innerText = pdfs.length;
-            db.collection("stats").doc("ads").onSnapshot(doc => { if(doc.exists) document.getElementById('st-ads-total').innerText = doc.data().count || 0; });
-            showToast("İstatistikler güncellendi");
-        }
-
-        // --- AKILLI SÖZLÜK (KAPSAMLI) ---
-        function processText(raw) {
-            const corrections = [
-                { p: /t[uü\-_]*rk[cç\-_]*e?/i, r: "Türkçe" }, { p: /trk[cç\-_]*e?/i, r: "Türkçe" }, 
-                { p: /mat[e]*mat[i]*k/i, r: "Matematik" }, { p: /geo[metri]*/i, r: "Geometri" }, 
-                { p: /fiz[ik]*/i, r: "Fizik" }, { p: /kim[ya]*/i, r: "Kimya" }, 
-                { p: /biy[oloja]*/i, r: "Biyoloji" }, { p: /bio/i, r: "Biyoloji" },
-                { p: /edeb[iyat]*/i, r: "Edebiyat" }, { p: /tar[ih]*/i, r: "Tarih" },
-                { p: /cog[rafy]*/i, r: "Coğrafya" }, { p: /co[gğ\-_]*raf[ya]*/i, r: "Coğrafya" },
-                { p: /fel[sefa]*/i, r: "Felsefe" }, { p: /din/i, r: "Din" },
-                { p: /ing[ilizce]*/i, r: "İngilizce" }, { p: /yay[iı\-_]*n[l]*[a]*[r]*[iı\-_]*/i, r: "Yayınları" },
-                { p: /bank[asiı\-_]*/i, r: "Bankası" }, { p: /sor[u]*/i, r: "Soru" },
-                { p: /kon[u]*/i, r: "Konu" }, { p: /anlat[iı]m/i, r: "Anlatım" },
-                { p: /fas[ikül]*/i, r: "Fasikül" }, { p: /den[eme]*/i, r: "Deneme" },
-                { p: /par[agraf]*/i, r: "Paragraf" }, { p: /prob[lem]*/i, r: "Problemler" },
-                { p: /yildizlar/i, r: "Yıldızlar" }, { p: /ligi/i, r: "Ligi" },
-                { p: /ayd[iı\-_]*n/i, r: "Aydın" }, { p: /h[iı\-_]*z/i, r: "Hız" }, { p: /eis/i, r: "Eis" },
-                { p: /s[iı\-_]n[iı\-_]f/i, r: "Sınıf" }, { p: /yapra[kğ\-_]*/i, r: "Yaprak" },
-                { p: /test/i, r: "Test" }, { p: /co[zö\-_]*[uü\-_]*m/i, r: "Çözüm" }
-            ];
-            let words = raw.split(/[\s_\-]+/);
-            let correctedWords = words.map(w => {
-                if(!w) return "";
-                for(let c of corrections) { if(c.p.test(w)) return c.r; }
-                return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
-            });
-            return correctedWords.filter(w => w.length > 0).join(' ');
-        }
-
-        function detectCats(cleanName) {
-            let detectedCats = [];
-            if(/tyt/i.test(cleanName)) detectedCats.push("TYT");
-            if(/ayt/i.test(cleanName)) detectedCats.push("AYT");
-            
-            CATS.forEach(c => { 
-                if(c.n !== "TYT" && c.n !== "AYT") { 
-                    if(cleanName.includes(c.n)) detectedCats.push(c.n); 
-                } 
-            });
-            
-            if((cleanName.includes("Coğrafya") || /cog/i.test(cleanName)) && !detectedCats.includes("Coğrafya")) detectedCats.push("Coğrafya");
-            if(cleanName.includes("Geometri") && !detectedCats.includes("Geometri")) detectedCats.push("Geometri");
-
-            if(detectedCats.length === 0) detectedCats.push("Diğer");
-            return detectedCats.join(', ');
-        }
-
-        function autoDetect(url) {
-            let filename = ""; try { filename = decodeURIComponent(url.split('?')[0].split('/').pop()); } catch(e){ return; }
-            let raw = filename.replace(/\.pdf$/i, ''); 
-            let cleanName = processText(raw);
-            let cats = detectCats(cleanName);
-            document.getElementById('ap-n').value = cleanName;
-            document.getElementById('ap-c').value = cats;
-            showToast("Otomatik düzeltme uygulandı.");
-        }
-
-        function liveCatDetect(val) {
-            let cats = detectCats(val);
-            document.getElementById('ap-c').value = cats;
-        }
+        function processText(raw) { const corrections = [ { p: /t[uü\-_]*rk[cç\-_]*e?/i, r: "Türkçe" }, { p: /trk[cç\-_]*e?/i, r: "Türkçe" }, { p: /mat[e]*mat[i]*k/i, r: "Matematik" }, { p: /geo[metri]*/i, r: "Geometri" }, { p: /fiz[ik]*/i, r: "Fizik" }, { p: /kim[ya]*/i, r: "Kimya" }, { p: /biy[oloja]*/i, r: "Biyoloji" }, { p: /bio/i, r: "Biyoloji" }, { p: /edeb[iyat]*/i, r: "Edebiyat" }, { p: /tar[ih]*/i, r: "Tarih" }, { p: /cog[rafy]*/i, r: "Coğrafya" }, { p: /co[gğ\-_]*raf[ya]*/i, r: "Coğrafya" }, { p: /fel[sefa]*/i, r: "Felsefe" }, { p: /din/i, r: "Din" }, { p: /ing[ilizce]*/i, r: "İngilizce" }, { p: /yay[iı\-_]*n[l]*[a]*[r]*[iı\-_]*/i, r: "Yayınları" }, { p: /bank[asiı\-_]*/i, r: "Bankası" }, { p: /sor[u]*/i, r: "Soru" }, { p: /kon[u]*/i, r: "Konu" }, { p: /anlat[iı]m/i, r: "Anlatım" }, { p: /fas[ikül]*/i, r: "Fasikül" }, { p: /den[eme]*/i, r: "Deneme" }, { p: /par[agraf]*/i, r: "Paragraf" }, { p: /prob[lem]*/i, r: "Problemler" }, { p: /yildizlar/i, r: "Yıldızlar" }, { p: /ligi/i, r: "Ligi" }, { p: /ayd[iı\-_]*n/i, r: "Aydın" }, { p: /h[iı\-_]*z/i, r: "Hız" }, { p: /eis/i, r: "Eis" }, { p: /s[iı\-_]n[iı\-_]f/i, r: "Sınıf" }, { p: /yapra[kğ\-_]*/i, r: "Yaprak" }, { p: /test/i, r: "Test" }, { p: /co[zö\-_]*[uü\-_]*m/i, r: "Çözüm" } ]; let words = raw.split(/[\s_\-]+/); let correctedWords = words.map(w => { if(!w) return ""; for(let c of corrections) { if(c.p.test(w)) return c.r; } return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(); }); return correctedWords.filter(w => w.length > 0).join(' '); }
+        function detectCats(cleanName) { let detectedCats = []; if(/tyt/i.test(cleanName)) detectedCats.push("TYT"); if(/ayt/i.test(cleanName)) detectedCats.push("AYT"); CATS.forEach(c => { if(c.n !== "TYT" && c.n !== "AYT") { if(cleanName.includes(c.n)) detectedCats.push(c.n); } }); if((cleanName.includes("Coğrafya") || /cog/i.test(cleanName)) && !detectedCats.includes("Coğrafya")) detectedCats.push("Coğrafya"); if(cleanName.includes("Geometri") && !detectedCats.includes("Geometri")) detectedCats.push("Geometri"); if(detectedCats.length === 0) detectedCats.push("Diğer"); return detectedCats.join(', '); }
+        function autoDetect(url) { let filename = ""; try { filename = decodeURIComponent(url.split('?')[0].split('/').pop()); } catch(e){ return; } let raw = filename.replace(/\.pdf$/i, ''); let cleanName = processText(raw); let cats = detectCats(cleanName); document.getElementById('ap-n').value = cleanName; document.getElementById('ap-c').value = cats; showToast("Otomatik düzeltme uygulandı."); }
+        function liveCatDetect(val) { let cats = detectCats(val); document.getElementById('ap-c').value = cats; }
         
-        function openModal(id){
-            playClick();
-            document.querySelectorAll('.modal-overlay').forEach(x => { x.style.display='none'; x.classList.remove('closing'); });
-            document.getElementById(id).style.display='flex';
-            if(id==='m-reqs') renderRequests(); if(id==='m-pdf') renderAdmPdfs(''); if(id==='m-users') renderUsers(''); if(id==='m-user-notifs') renderNotifications(); 
-            if(id==='m-req-user') showToast("İstek formu açıldı");
-            if(id==='m-add-notif') renderAdmNotifs();
-        }
-
-        function closeM(){ 
-            playClick();
-            const visibleModals = document.querySelectorAll('.modal-overlay[style*="flex"]');
-            visibleModals.forEach(modal => {
-                modal.classList.add('closing');
-                const box = modal.querySelector('.modal-box'); if(box) box.classList.add('closing');
-                setTimeout(() => { modal.style.display = 'none'; modal.classList.remove('closing'); if(box) box.classList.remove('closing'); }, 280);
-            });
-            showToast("Pencere kapatıldı"); 
-        }
+        function openModal(id){ playClick(); document.querySelectorAll('.modal-overlay').forEach(x => { x.style.display='none'; x.classList.remove('closing'); }); document.getElementById(id).style.display='flex'; if(id==='m-reqs') renderRequests(); if(id==='m-pdf') renderAdmPdfs(''); if(id==='m-users') renderUsers(''); if(id==='m-user-notifs') renderNotifications(); if(id==='m-req-user') showToast("İstek formu açıldı"); if(id==='m-add-notif') renderAdmNotifs(); }
+        function closeM(){ playClick(); const visibleModals = document.querySelectorAll('.modal-overlay[style*="flex"]'); visibleModals.forEach(modal => { modal.classList.add('closing'); const box = modal.querySelector('.modal-box'); if(box) box.classList.add('closing'); setTimeout(() => { modal.style.display = 'none'; modal.classList.remove('closing'); if(box) box.classList.remove('closing'); }, 280); }); showToast("Pencere kapatıldı"); }
         
-        // PDF EKLEME (FIXED)
-        function addPdf(){
-            playClick();
-            const name = document.getElementById('ap-n').value;
-            const link = document.getElementById('ap-l').value;
-            const cat = document.getElementById('ap-c').value;
-            const adVal = document.getElementById('ap-ads').value;
-
-            if (!name || !link || !cat) { showToast("Lütfen tüm alanları doldurun!", "error"); return; }
-
-            const btn = document.querySelector('#btn-add-pdf');
-            const oldText = btn.innerText;
-            btn.innerText = "Kaydediliyor...";
-            btn.disabled = true;
-
-            let adCount = (adVal === "") ? null : Number(adVal);
-
-            db.collection("pdfs").add({ 
-                name: name, link: link, cat: cat, reqAds: adCount, date: Date.now(), downloads: 0 
-            }).then(() => {
-                showToast('PDF Başarıyla Eklendi!'); 
-                document.getElementById('ap-l').value = ''; 
-                document.getElementById('ap-n').value = ''; 
-                document.getElementById('ap-ads').value = ''; 
-                document.getElementById('ap-c').value = ''; 
-                renderAdmPdfs(''); 
-            }).catch(e => {
-                showToast("Hata oluştu!", "error");
-                console.error(e);
-            }).finally(() => {
-                btn.innerText = oldText;
-                btn.disabled = false;
-            });
-        }
-
+        function addPdf(){ playClick(); const name = document.getElementById('ap-n').value; const link = document.getElementById('ap-l').value; const cat = document.getElementById('ap-c').value; const adVal = document.getElementById('ap-ads').value; if (!name || !link || !cat) { showToast("Lütfen tüm alanları doldurun!", "error"); return; } const btn = document.querySelector('#btn-add-pdf'); const oldText = btn.innerText; btn.innerText = "Kaydediliyor..."; btn.disabled = true; let adCount = (adVal === "") ? null : Number(adVal); db.collection("pdfs").add({ name: name, link: link, cat: cat, reqAds: adCount, date: Date.now(), downloads: 0 }).then(() => { showToast('PDF Başarıyla Eklendi!'); document.getElementById('ap-l').value = ''; document.getElementById('ap-n').value = ''; document.getElementById('ap-ads').value = ''; document.getElementById('ap-c').value = ''; renderAdmPdfs(''); }).catch(e => { showToast("Hata oluştu!", "error"); console.error(e); }).finally(() => { btn.innerText = oldText; btn.disabled = false; }); }
         function renderAdmPdfs(q){ let d=document.getElementById('adm-pdf-list'); d.innerHTML=''; pdfs.forEach(p=>{ if(p.name.toLowerCase().includes(q)) d.innerHTML+=`<div class="list-item"><span>${p.name} <span style="font-size:10px; color:#aaa;">(Reklam: ${p.reqAds || 'Genel'})</span></span> <button class="btn btn-dang" style="width:auto; padding:5px 10px; font-size:12px;" onclick="delPdf('${p.k}')">Sil</button></div>`; }); }
         function delPdf(k){ playClick(); if(confirm('Emin misin?')) { db.collection("pdfs").doc(k).delete().then(() => { showToast("PDF Silindi", "error"); renderAdmPdfs(''); }); } }
         
-        function renderUsers(q) {
-            let d = document.getElementById('adm-user-list'); d.innerHTML = 'Yükleniyor...';
-            db.collection("users").get().then(snap => {
-                d.innerHTML = ''; let count = 0;
-                snap.forEach(doc => {
-                    let u = doc.data(); let name = u.name || "İsimsiz";
-                    if(q === '' || name.toLowerCase().includes(q.toLowerCase())) {
-                        d.innerHTML += `<div class="list-item"><div><b>${name}</b><br><span style="font-size:10px; color:#64748B;">ID: ${doc.id} | Reklam: ${u.adCount || 0}</span></div><div style="font-size:10px;">${new Date(u.last).toLocaleDateString()}</div></div>`; count++;
-                    }
-                });
-                if(count === 0) d.innerHTML = '<div style="padding:10px; color:#94A3B8;">Bulunamadı.</div>';
-                if(q.length > 2) showToast("Kullanıcılar filtrelendi");
-            });
-        }
+        function renderUsers(q) { let d=document.getElementById('adm-user-list'); d.innerHTML = 'Yükleniyor...'; db.collection("users").get().then(snap => { d.innerHTML = ''; let count = 0; snap.forEach(doc => { let u = doc.data(); let name = u.name || "İsimsiz"; if(q === '' || name.toLowerCase().includes(q.toLowerCase())) { d.innerHTML += `<div class="list-item"><div><b>${name}</b><br><span style="font-size:10px; color:#64748B;">ID: ${doc.id} | Reklam: ${u.adCount || 0}</span></div><div style="font-size:10px;">${new Date(u.last).toLocaleDateString()}</div></div>`; count++; } }); if(count === 0) d.innerHTML = '<div style="padding:10px; color:#94A3B8;">Bulunamadı.</div>'; if(q.length > 2) showToast("Kullanıcılar filtrelendi"); }); }
         function sendReq(){ playClick(); let t=document.getElementById('req-txt').value; if(t){ db.collection("requests").add({book:t, name:user.first_name}); showToast('İstek Gönderildi'); closeM(); } else { showToast("Lütfen PDF adı yazın", "error"); } }
 
-        function renderAdmNotifs() {
-            let d = document.getElementById('adm-notif-list');
-            d.innerHTML = 'Yükleniyor...';
-            db.collection("notifications").orderBy("date", "desc").get().then(snap => {
-                d.innerHTML = '';
-                if(snap.empty) { d.innerHTML = '<div style="font-size:12px; color:#94A3B8;">Duyuru yok.</div>'; return; }
-                snap.forEach(doc => {
-                    let n = doc.data();
-                    let date = new Date(n.date).toLocaleDateString();
-                    d.innerHTML += `<div class="list-item" style="padding:10px; font-size:12px;"><div style="flex:1; margin-right:10px;"><div style="font-weight:700; color:var(--text-sub);">${date}</div><div>${n.text}</div></div><i class="fa-solid fa-trash" style="color:#EF4444; cursor:pointer; padding:5px;" onclick="delNotif('${doc.id}')"></i></div>`;
-                });
-            });
-        }
-
-        function delNotif(k) {
-            playClick();
-            if(confirm('Bu duyuruyu silmek istediğine emin misin?')) {
-                db.collection("notifications").doc(k).delete().then(() => { showToast("Duyuru silindi"); renderAdmNotifs(); });
-            }
-        }
+        function renderAdmNotifs() { let d = document.getElementById('adm-notif-list'); d.innerHTML = 'Yükleniyor...'; db.collection("notifications").orderBy("date", "desc").get().then(snap => { d.innerHTML = ''; if(snap.empty) { d.innerHTML = '<div style="font-size:12px; color:#94A3B8;">Duyuru yok.</div>'; return; } snap.forEach(doc => { let n = doc.data(); let date = new Date(n.date).toLocaleDateString(); d.innerHTML += `<div class="list-item" style="padding:10px; font-size:12px;"><div style="flex:1; margin-right:10px;"><div style="font-weight:700; color:var(--text-sub);">${date}</div><div>${n.text}</div></div><i class="fa-solid fa-trash" style="color:#EF4444; cursor:pointer; padding:5px;" onclick="delNotif('${doc.id}')"></i></div>`; }); }); }
+        function delNotif(k) { playClick(); if(confirm('Bu duyuruyu silmek istediğine emin misin?')) { db.collection("notifications").doc(k).delete().then(() => { showToast("Duyuru silindi"); renderAdmNotifs(); }); } }
     </script>
 </body>
 </html>
