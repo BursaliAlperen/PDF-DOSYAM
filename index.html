@@ -8,7 +8,7 @@
     <!-- 1. Telegram SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
     
-    <!-- 2. YENİ REKLAM SDK (Libtl) -->
+    <!-- 2. REKLAM SDK (Libtl - 10371617) -->
     <script src='//libtl.com/sdk.js' data-zone='10371617' data-sdk='show_10371617'></script>
     
     <!-- Firebase -->
@@ -123,7 +123,7 @@
     <div class="sidebar" id="sidebar">
         <h3 style="margin-bottom:20px; color:var(--primary);">Kategoriler</h3>
         <div style="flex:1; overflow-y:auto;" id="sb-list"></div>
-        <div style="margin-top:20px; text-align:center; font-size:12px; color:var(--text-sub);">v11.1 NewAds</div>
+        <div style="margin-top:20px; text-align:center; font-size:12px; color:var(--text-sub);">v12.0 NewAds</div>
     </div>
 
     <!-- HEADER -->
@@ -325,7 +325,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             showToast("Uygulama Hazır!");
             
-            // In-App Otomatik Reklam Başlatma
+            // In-App Otomatik Reklam Başlatma (Gerekirse)
             if (typeof show_10371617 === 'function') {
                 show_10371617({
                     type: 'inApp',
@@ -337,7 +337,6 @@
                         everyPage: false
                     }
                 });
-                console.log("In-App Ads Initialized");
             }
 
             document.querySelectorAll('button, .btn, .nav-item, .side-item, .cat-item, .header-icon-btn').forEach(el => { el.addEventListener('click', playClick); });
@@ -470,25 +469,39 @@
         function renderHistory() { let d = document.getElementById('history-list'); let hist = JSON.parse(localStorage.getItem('pdf_history') || '[]'); d.innerHTML = ''; if(hist.length === 0) { d.innerHTML = '<div style="color:#94A3B8;">Henüz indirme yok.</div>'; return; } hist.forEach(h => { d.innerHTML += `<div class="list-item" style="padding:10px; cursor:pointer;" onclick="copyText('${h.l}')"><div><div style="font-weight:600; font-size:13px;">${h.n}</div><div style="font-size:10px; color:#64748B;">${new Date(h.d).toLocaleString('tr-TR')}</div></div><i class="fa-regular fa-copy" style="color:var(--primary);"></i></div>`; }); }
         function clearHistory() { playClick(); if(confirm('Geçmişi silmek istiyor musunuz?')) { localStorage.removeItem('pdf_history'); renderHistory(); showToast("Geçmiş temizlendi"); } }
 
-        // --- YENİ REKLAM SİSTEMİ (LIBTL) ---
+        // --- ÖDÜLLÜ REKLAM ENTEGRASYONU (Show_10371617) ---
         function watchAdSequence(){
-            playClick(); let btn = document.getElementById('btn-ad'); btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            playClick(); 
+            let btn = document.getElementById('btn-ad'); 
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; // Loading efekti
             
+            // SDK kontrolü
             if (typeof show_10371617 === 'function') {
                 show_10371617().then(() => {
-                    // Reklam başarıyla izlendi
+                    // BAŞARILI: Reklam izlendi, adım tamamlanıyor.
                     completeAdStep();
                 }).catch(e => {
-                    console.error("Reklam hatası:", e);
-                    showToast("Reklam yüklenemedi.", "error");
-                    updateUnlockUI();
+                    // HATA veya KAPATMA
+                    console.error("Reklam kapatıldı veya hata:", e);
+                    showToast("Reklam izlenmedi.", "error");
+                    updateUnlockUI(); // Butonu eski haline getir
                 });
             } else {
-                showToast("Reklam servisi hazır değil.", "error");
+                showToast("Reklam yüklenemedi. Sayfayı yenileyin.", "error");
                 updateUnlockUI();
             }
         }
-        function completeAdStep() { currentAdStep++; db.collection("stats").doc("ads").set({ count: firebase.firestore.FieldValue.increment(1) }, {merge:true}); if(user.id !== 0) db.collection("users").doc(String(user.id)).set({ adCount: firebase.firestore.FieldValue.increment(1) }, {merge:true}); showToast("İşlem tamamlandı, adım kaydedildi."); updateUnlockUI(); }
+
+        function completeAdStep() { 
+            currentAdStep++; 
+            // İstatistik güncelle
+            db.collection("stats").doc("ads").set({ count: firebase.firestore.FieldValue.increment(1) }, {merge:true}); 
+            if(user.id !== 0) {
+                db.collection("users").doc(String(user.id)).set({ adCount: firebase.firestore.FieldValue.increment(1) }, {merge:true});
+            }
+            showToast("Tebrikler! +1 Adım."); 
+            updateUnlockUI(); 
+        }
 
         function renderNotifications() { const list = document.getElementById('user-notif-list'); list.innerHTML = '<div style="text-align:center; color:#CBD5E1;">Yükleniyor...</div>'; db.collection("notifications").orderBy("date", "desc").limit(10).get().then(snap => { list.innerHTML = ''; if(snap.empty) { list.innerHTML = '<div style="text-align:center; color:#94A3B8; margin-top:20px;">Henüz duyuru yok.</div>'; return; } snap.forEach(doc => { let n = doc.data(); let date = new Date(n.date).toLocaleDateString(); list.innerHTML += `<div class="notif-item"><div style="font-weight:700; margin-bottom:5px; font-size:12px; opacity:0.7;">${date}</div>${n.text}</div>`; }); showToast("Duyurular yüklendi"); }); }
         function sendNotification() { playClick(); let txt = document.getElementById('notif-txt').value; if(!txt) return; db.collection("notifications").add({ text: txt, date: Date.now(), by: user.first_name }).then(() => { showToast("Duyuru yayınlandı!"); document.getElementById('notif-txt').value = ''; renderAdmNotifs(); }); }
@@ -513,7 +526,6 @@
         function renderAdmNotifs() { let d = document.getElementById('adm-notif-list'); d.innerHTML = 'Yükleniyor...'; db.collection("notifications").orderBy("date", "desc").get().then(snap => { d.innerHTML = ''; if(snap.empty) { d.innerHTML = '<div style="font-size:12px; color:#94A3B8;">Duyuru yok.</div>'; return; } snap.forEach(doc => { let n = doc.data(); let date = new Date(n.date).toLocaleDateString(); d.innerHTML += `<div class="list-item" style="padding:10px; font-size:12px;"><div style="flex:1; margin-right:10px;"><div style="font-weight:700; color:var(--text-sub);">${date}</div><div>${n.text}</div></div><i class="fa-solid fa-trash" style="color:#EF4444; cursor:pointer; padding:5px;" onclick="delNotif('${doc.id}')"></i></div>`; }); }); }
         function delNotif(k) { playClick(); if(confirm('Bu duyuruyu silmek istediğine emin misin?')) { db.collection("notifications").doc(k).delete().then(() => { showToast("Duyuru silindi"); renderAdmNotifs(); }); } }
 
-        // --- EKSİK OLAN İSTEK GÖSTERME VE SİLME FONKSİYONLARI EKLENDİ ---
         function renderRequests() {
             let d = document.getElementById('adm-req-list');
             d.innerHTML = '<div style="text-align:center; color:#CBD5E1;">Yükleniyor...</div>';
@@ -549,7 +561,7 @@
             if(confirm('Bu isteği silmek istiyor musunuz?')) {
                 db.collection("requests").doc(id).delete().then(() => {
                     showToast("İstek silindi", "error");
-                    renderRequests(); // Listeyi yenile
+                    renderRequests(); 
                 });
             }
         }
