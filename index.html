@@ -8,7 +8,7 @@
     <!-- 1. Telegram SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
     
-    <!-- 2. REKLAM SDK -->
+    <!-- 2. REKLAM SDK (Interstitial - Tam Ekran) -->
     <script src="https://js.onclckvd.com/in-stream-ad-admanager/tma.js"></script>
     
     <!-- Firebase -->
@@ -71,24 +71,8 @@
         /* HEADER */
         .header { padding: 20px; padding-top: 50px; background: var(--bg); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
         
-        /* HEADER ACTION BUTTONS (MENU & HISTORY) */
-        .header-actions {
-            display: none; /* Varsayılan gizli */
-            flex-direction: column;
-            gap: 15px;
-            align-items: center;
-        }
-        .header-icon-btn {
-            width: 40px; height: 40px;
-            background: var(--white);
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            color: var(--text-main);
-            font-size: 18px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
+        .header-actions { display: none; flex-direction: column; gap: 15px; align-items: center; }
+        .header-icon-btn { width: 40px; height: 40px; background: var(--white); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); color: var(--text-main); font-size: 18px; cursor: pointer; transition: 0.2s; }
         .header-icon-btn:active { transform: scale(0.9); background: var(--primary-light); color: var(--primary); }
 
         /* PDF GRID */
@@ -139,7 +123,7 @@
     <div class="sidebar" id="sidebar">
         <h3 style="margin-bottom:20px; color:var(--primary);">Kategoriler</h3>
         <div style="flex:1; overflow-y:auto;" id="sb-list"></div>
-        <div style="margin-top:20px; text-align:center; font-size:12px; color:var(--text-sub);">v7.8 History</div>
+        <div style="margin-top:20px; text-align:center; font-size:12px; color:var(--text-sub);">v8.5 Clean</div>
     </div>
 
     <!-- HEADER -->
@@ -149,7 +133,6 @@
             <div style="font-weight:700; font-size:18px;" id="u-name">Kullanıcı</div>
         </div>
         
-        <!-- YENİ SAĞ ÜST KISIM (MENÜ + GEÇMİŞ) -->
         <div class="header-actions" id="header-actions">
             <div class="header-icon-btn" onclick="toggleSidebar(true)">
                 <i class="fa-solid fa-bars-staggered"></i>
@@ -169,7 +152,10 @@
         <div style="background: linear-gradient(135deg, #6366F1, #A855F7); color: white; border-radius: 24px; padding: 24px; margin-bottom: 24px; position: relative; overflow: hidden; box-shadow: 0 15px 30px -10px rgba(99, 102, 241, 0.4);">
             <h3 style="font-size:22px;">Sınavlara Hazır Mısın?</h3>
             <p style="opacity:0.9; margin-top:5px; font-size:14px;">Tüm kaynaklar elinin altında.</p>
-            <button class="btn" style="background:var(--white); color:var(--primary); width:auto; padding:10px 20px; margin-top:15px; font-size:13px;" onclick="go('pdfs', document.querySelectorAll('.nav-item')[1])">Kütüphaneye Git</button>
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button class="btn" style="background:var(--white); color:var(--primary); width:auto; padding:10px 20px; font-size:13px; flex:1;" onclick="go('pdfs', document.querySelectorAll('.nav-item')[1])">Kütüphaneye Git</button>
+                <button class="btn" style="background:rgba(255,255,255,0.2); color:white; width:auto; padding:10px 20px; font-size:13px; backdrop-filter:blur(5px); flex:1;" onclick="openModal('m-req-user')">PDF İste</button>
+            </div>
             <i class="fa-solid fa-book-medical" style="position: absolute; right: -20px; bottom: -30px; font-size: 120px; opacity: 0.15; transform: rotate(-15deg);"></i>
         </div>
 
@@ -204,7 +190,7 @@
         </div>
 
         <div class="side-item" onclick="openModal('m-req-user')" style="background:var(--white); border:1px solid var(--border); margin-bottom:10px;">
-            <i class="fa-solid fa-bullhorn" style="color:var(--primary);"></i> <div>Kitap İste</div>
+            <i class="fa-solid fa-bullhorn" style="color:var(--primary);"></i> <div>PDF İste</div>
         </div>
         <div class="side-item" onclick="openModal('m-user-notifs')" style="background:var(--white); border:1px solid var(--border);">
             <i class="fa-solid fa-bell" style="color:#F59E0B;"></i> <div>Duyurular</div>
@@ -226,7 +212,7 @@
             <button class="btn btn-sec" onclick="openModal('m-pdf')">PDF Yönet (Ekle/Sil)</button>
             <button class="btn btn-sec" onclick="openModal('m-users')">Kullanıcılar</button>
             <button class="btn btn-sec" onclick="openModal('m-reqs')">İstekler</button>
-            <button class="btn btn-sec" onclick="openModal('m-add-notif')">Duyuru Yap</button>
+            <button class="btn btn-sec" onclick="openModal('m-add-notif')">Duyuru Yönetimi</button>
         </div>
     </div>
 
@@ -287,14 +273,18 @@
     
     <div id="m-add-notif" class="modal-overlay">
         <div class="modal-box">
-            <h3>Duyuru Yap</h3>
-            <textarea id="notif-txt" class="txtarea" placeholder="Mesajınız..."></textarea>
+            <h3>Duyuru Yönetimi</h3>
+            <textarea id="notif-txt" class="txtarea" placeholder="Yeni duyuru yaz..."></textarea>
             <button class="btn" onclick="sendNotification()">Yayınla</button>
-            <button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">Kapat</button>
+            <div style="margin:15px 0; border-top:1px solid var(--border); padding-top:10px; text-align:left;">
+                <h5 style="margin-bottom:10px; color:var(--text-sub);">Aktif Duyurular (Silmek için tıkla)</h5>
+                <div id="adm-notif-list" style="max-height:150px; overflow-y:auto;"></div>
+            </div>
+            <button class="btn btn-sec" style="margin-top:5px;" onclick="closeM()">Kapat</button>
         </div>
     </div>
     
-    <div id="m-req-user" class="modal-overlay"><div class="modal-box"><h3>Kitap İste</h3><input id="req-txt" class="inp" placeholder="Kitap Adı"><button class="btn" onclick="sendReq()">Gönder</button><button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">İptal</button></div></div>
+    <div id="m-req-user" class="modal-overlay"><div class="modal-box"><h3>PDF İste</h3><input id="req-txt" class="inp" placeholder="PDF Adı"><button class="btn" onclick="sendReq()">Gönder</button><button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">İptal</button></div></div>
 
     <!-- BOTTOM NAV -->
     <div class="nav-container">
@@ -330,12 +320,12 @@
         const realClick = new Audio("https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3");
         function playClick() { realClick.currentTime = 0; realClick.volume = 0.4; realClick.play().catch(() => {}); }
 
-        // --- REKLAM INIT ---
+        // --- INTERSTITIAL REKLAM INIT ---
         window.showAdFn = null;
         document.addEventListener('DOMContentLoaded', () => {
             showToast("Uygulama Hazır!");
             if(window.initCdTma) {
-                window.initCdTma({ id: 6103736 }).then(show => { window.showAdFn = show; console.log("Reklam Servisi Aktif"); }).catch(e => { console.error("Reklam Başlatma Hatası:", e); });
+                window.initCdTma({ id: 6103736 }).then(show => { window.showAdFn = show; console.log("Int. Reklam Servisi Aktif"); }).catch(e => { console.error("Reklam Başlatma Hatası:", e); });
             } else { console.log("Reklam Scripti Yüklenemedi"); }
             
             document.querySelectorAll('button, .btn, .nav-item, .side-item, .cat-item, .header-icon-btn').forEach(el => { el.addEventListener('click', playClick); });
@@ -380,20 +370,13 @@
             showToast("Veriler güncellendi.");
         };
 
-        // --- GÖRÜNÜRLÜK AYARI ---
         function go(viewId, el) {
             playClick(); 
             document.querySelectorAll('.view').forEach(x=>x.classList.remove('active')); 
             document.getElementById('v-'+viewId).classList.add('active'); 
             
-            // Header Butonlarını Sadece PDF Ekranında Göster
             const headerActions = document.getElementById('header-actions');
-            if(viewId === 'pdfs') {
-                headerActions.style.display = 'flex';
-            } else {
-                headerActions.style.display = 'none';
-            }
-
+            if(viewId === 'pdfs') { headerActions.style.display = 'flex'; } else { headerActions.style.display = 'none'; }
             if(el) { document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active')); el.classList.add('active'); } 
             showToast(viewId === 'home' ? 'Ana Sayfa' : viewId === 'pdfs' ? 'Kütüphane' : viewId === 'profile' ? 'Profil' : 'Yönetici Paneli');
         }
@@ -415,6 +398,30 @@
         }
         function getPdfIcon(c) { let f=CATS.find(x=>x.n===c); return f?f.i:'fa-file-pdf'; }
 
+        // --- HELPER: KOPYALAMA ---
+        function copyText(text) {
+            const el = document.createElement('textarea');
+            el.value = text;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            showToast("Bağlantı kopyalandı!");
+        }
+
+        // --- HELPER: KİLİT KONTROL ---
+        function isUnlocked(id) {
+            let unlocked = JSON.parse(localStorage.getItem('unlocked_pdfs') || '[]');
+            return unlocked.includes(id);
+        }
+        function setUnlocked(id) {
+            let unlocked = JSON.parse(localStorage.getItem('unlocked_pdfs') || '[]');
+            if(!unlocked.includes(id)) {
+                unlocked.push(id);
+                localStorage.setItem('unlocked_pdfs', JSON.stringify(unlocked));
+            }
+        }
+
         function renderPdfs(c) {
             let list = document.getElementById('pdf-list'); list.innerHTML = '';
             let q = document.getElementById('search').value.toLowerCase();
@@ -430,6 +437,9 @@
                 let firstCat = p.cat.split(',')[0].trim();
                 let icon = getPdfIcon(firstCat) || 'fa-file-pdf';
                 let dateStr = p.date ? new Date(p.date).toLocaleDateString('tr-TR') : '...';
+                let lockIcon = isUnlocked(p.k) ? 'fa-unlock' : 'fa-lock';
+                let lockColor = isUnlocked(p.k) ? '#10B981' : '#CBD5E1';
+
                 list.innerHTML += `
                     <div class="pdf-box" onclick="unlockPdf('${p.k}')">
                         <div class="pdf-thumb"><i class="fa-solid ${icon}"></i></div>
@@ -439,46 +449,48 @@
                             <span><i class="fa-solid fa-download"></i> ${p.downloads || 0}</span>
                             <span><i class="fa-regular fa-clock"></i> ${dateStr}</span>
                         </div>
-                        <i class="fa-solid fa-lock" style="position:absolute; top:10px; right:10px; color:#CBD5E1;"></i>
+                        <i class="fa-solid ${lockIcon}" style="position:absolute; top:10px; right:10px; color:${lockColor};"></i>
                     </div>`;
             });
         }
         function render() { renderPdfs('all'); if(document.getElementById('search').value.length > 2) showToast('Arama yapılıyor...'); }
 
         function unlockPdf(k){ 
-            playClick(); selPdf = pdfs.find(x=>x.k===k); currentAdStep = 0; 
+            playClick(); 
+            selPdf = pdfs.find(x=>x.k===k); 
+            if(isUnlocked(k)) { currentAdStep = parseInt(selPdf.reqAds || globalReqAds); } else { currentAdStep = 0; }
             if(selPdf.reqAds !== undefined && selPdf.reqAds !== null && selPdf.reqAds !== "") { selPdf.finalReq = parseInt(selPdf.reqAds); } else { selPdf.finalReq = globalReqAds; }
-            updateUnlockUI(); openModal('m-unlock'); showToast(selPdf.name + " seçildi");
+            updateUnlockUI(); 
+            openModal('m-unlock'); 
+            showToast(selPdf.name + " seçildi");
         }
         
         function updateUnlockUI(){
             let req = selPdf.finalReq;
+            if(isUnlocked(selPdf.k)) currentAdStep = req;
             document.getElementById('req-ads-count').innerText = req - currentAdStep;
             document.getElementById('prog-txt').innerText = `${currentAdStep}/${req}`;
             let deg = (currentAdStep / req) * 360;
             document.getElementById('prog-circle').style.background = `conic-gradient(var(--primary) ${deg}deg, #E2E8F0 ${deg}deg)`;
             let btn = document.getElementById('btn-ad');
+            
             if(currentAdStep >= req) { 
-                btn.innerHTML = 'İNDİR'; btn.style.background = '#10B981'; 
+                btn.innerHTML = 'LİNKİ KOPYALA'; btn.style.background = '#10B981'; 
                 btn.onclick = () => { 
-                    playClick(); 
-                    addToHistory(selPdf); // GEÇMİŞE EKLE
+                    playClick(); addToHistory(selPdf); setUnlocked(selPdf.k);
                     db.collection("pdfs").doc(selPdf.k).update({ downloads: firebase.firestore.FieldValue.increment(1) });
-                    tg.openLink(selPdf.link); 
-                    showToast('İndirme Başlatıldı!'); 
-                    closeM(); 
+                    copyText(selPdf.link); closeM(); renderPdfs('all'); 
                 }; 
             } else { 
                 btn.innerHTML = `Reklam İzle`; btn.style.background = ''; btn.onclick = watchAdSequence; 
             }
         }
 
-        // --- GEÇMİŞ YÖNETİMİ (LOCAL STORAGE) ---
+        // --- GEÇMİŞ ---
         function addToHistory(pdf) {
             let hist = JSON.parse(localStorage.getItem('pdf_history') || '[]');
-            // Aynı PDF varsa çıkar, başa ekle
             hist = hist.filter(x => x.n !== pdf.name);
-            hist.unshift({ n: pdf.name, d: Date.now() });
+            hist.unshift({ n: pdf.name, l: pdf.link, d: Date.now() });
             if(hist.length > 20) hist.pop();
             localStorage.setItem('pdf_history', JSON.stringify(hist));
         }
@@ -488,25 +500,15 @@
             let hist = JSON.parse(localStorage.getItem('pdf_history') || '[]');
             d.innerHTML = '';
             if(hist.length === 0) { d.innerHTML = '<div style="color:#94A3B8;">Henüz indirme yok.</div>'; return; }
-            
             hist.forEach(h => {
-                d.innerHTML += `
-                    <div class="list-item" style="padding:10px;">
-                        <div>
-                            <div style="font-weight:600; font-size:13px;">${h.n}</div>
-                            <div style="font-size:10px; color:#64748B;">${new Date(h.d).toLocaleString('tr-TR')}</div>
-                        </div>
-                        <i class="fa-solid fa-check" style="color:#10B981;"></i>
-                    </div>`;
+                d.innerHTML += `<div class="list-item" style="padding:10px; cursor:pointer;" onclick="copyText('${h.l}')"><div><div style="font-weight:600; font-size:13px;">${h.n}</div><div style="font-size:10px; color:#64748B;">${new Date(h.d).toLocaleString('tr-TR')}</div></div><i class="fa-regular fa-copy" style="color:var(--primary);"></i></div>`;
             });
         }
 
         function clearHistory() {
             playClick();
             if(confirm('Geçmişi silmek istiyor musunuz?')) {
-                localStorage.removeItem('pdf_history');
-                renderHistory();
-                showToast("Geçmiş temizlendi");
+                localStorage.removeItem('pdf_history'); renderHistory(); showToast("Geçmiş temizlendi");
             }
         }
 
@@ -528,7 +530,7 @@
         }
         function sendNotification() {
             playClick(); let txt = document.getElementById('notif-txt').value; if(!txt) return;
-            db.collection("notifications").add({ text: txt, date: Date.now(), by: user.first_name }).then(() => { showToast("Duyuru yayınlandı!"); document.getElementById('notif-txt').value = ''; closeM(); });
+            db.collection("notifications").add({ text: txt, date: Date.now(), by: user.first_name }).then(() => { showToast("Duyuru yayınlandı!"); document.getElementById('notif-txt').value = ''; renderAdmNotifs(); });
         }
 
         function loadStats() {
@@ -542,9 +544,9 @@
             let filename = ""; try { filename = decodeURIComponent(url.split('?')[0].split('/').pop()); } catch(e){ return; }
             let raw = filename.replace(/\.pdf$/i, '').replace(/_/g, ' ').replace(/-/g, ' ');
             const corrections = [
-                { p: /t[uü\-_]*rk[cç\-_]*e?/i, r: "Türkçe" }, { p: /mat[e]*mat[i]*k/i, r: "Matematik" },
+                { p: /t[uü\-_]*rk[cç\-_]*e?/i, r: "Türkçe" }, { p: /trk[cç\-_]*e?/i, r: "Türkçe" }, { p: /mat[e]*mat[i]*k/i, r: "Matematik" },
                 { p: /geo[metri]*/i, r: "Geometri" }, { p: /fiz[ik]*/i, r: "Fizik" },
-                { p: /kim[ya]*/i, r: "Kimya" }, { p: /biy[oloja]*/i, r: "Biyoloji" },
+                { p: /kim[ya]*/i, r: "Kimya" }, { p: /biy[oloja]*/i, r: "Biyoloji" }, { p: /bio/i, r: "Biyoloji" },
                 { p: /edeb[iyat]*/i, r: "Edebiyat" }, { p: /tar[ih]*/i, r: "Tarih" },
                 { p: /cog[rafy]*/i, r: "Coğrafya" }, { p: /co[gğ\-_]*raf[ya]*/i, r: "Coğrafya" },
                 { p: /fel[sefa]*/i, r: "Felsefe" }, { p: /din/i, r: "Din" },
@@ -553,7 +555,8 @@
                 { p: /kon[u]*/i, r: "Konu" }, { p: /anlat[iı]m/i, r: "Anlatım" },
                 { p: /fas[ikül]*/i, r: "Fasikül" }, { p: /den[eme]*/i, r: "Deneme" },
                 { p: /par[agraf]*/i, r: "Paragraf" }, { p: /prob[lem]*/i, r: "Problemler" },
-                { p: /yildizlar/i, r: "Yıldızlar" }, { p: /ligi/i, r: "Ligi" }
+                { p: /yildizlar/i, r: "Yıldızlar" }, { p: /ligi/i, r: "Ligi" },
+                { p: /ayd[iı\-_]*n/i, r: "Aydın" }, { p: /h[iı\-_]*z/i, r: "Hız" }, { p: /eis/i, r: "Eis" }
             ];
             let words = raw.split(' ');
             let correctedWords = words.map(w => {
@@ -566,6 +569,7 @@
             if(/tyt/i.test(cleanName)) detectedCats.push("TYT");
             if(/ayt/i.test(cleanName)) detectedCats.push("AYT");
             CATS.forEach(c => { if(c.n !== "TYT" && c.n !== "AYT") { if(cleanName.includes(c.n)) detectedCats.push(c.n); } });
+            if(cleanName.includes("Coğrafya") && !detectedCats.includes("Coğrafya")) detectedCats.push("Coğrafya");
             if(detectedCats.length === 0) detectedCats.push("Diğer");
             document.getElementById('ap-n').value = cleanName;
             document.getElementById('ap-c').value = detectedCats.join(', ');
@@ -576,7 +580,9 @@
             playClick();
             document.querySelectorAll('.modal-overlay').forEach(x => { x.style.display='none'; x.classList.remove('closing'); });
             document.getElementById(id).style.display='flex';
-            if(id==='m-reqs') renderRequests(); if(id==='m-pdf') renderAdmPdfs(''); if(id==='m-users') renderUsers(''); if(id==='m-user-notifs') renderNotifications(); if(id==='m-req-user') showToast("İstek formu açıldı");
+            if(id==='m-reqs') renderRequests(); if(id==='m-pdf') renderAdmPdfs(''); if(id==='m-users') renderUsers(''); if(id==='m-user-notifs') renderNotifications(); 
+            if(id==='m-req-user') showToast("İstek formu açıldı");
+            if(id==='m-add-notif') renderAdmNotifs();
         }
 
         function closeM(){ 
@@ -623,7 +629,28 @@
                 if(q.length > 2) showToast("Kullanıcılar filtrelendi");
             });
         }
-        function sendReq(){ playClick(); let t=document.getElementById('req-txt').value; if(t){ db.collection("requests").add({book:t, name:user.first_name}); showToast('İstek Gönderildi'); closeM(); } else { showToast("Lütfen kitap adı yazın", "error"); } }
+        function sendReq(){ playClick(); let t=document.getElementById('req-txt').value; if(t){ db.collection("requests").add({book:t, name:user.first_name}); showToast('İstek Gönderildi'); closeM(); } else { showToast("Lütfen PDF adı yazın", "error"); } }
+
+        function renderAdmNotifs() {
+            let d = document.getElementById('adm-notif-list');
+            d.innerHTML = 'Yükleniyor...';
+            db.collection("notifications").orderBy("date", "desc").get().then(snap => {
+                d.innerHTML = '';
+                if(snap.empty) { d.innerHTML = '<div style="font-size:12px; color:#94A3B8;">Duyuru yok.</div>'; return; }
+                snap.forEach(doc => {
+                    let n = doc.data();
+                    let date = new Date(n.date).toLocaleDateString();
+                    d.innerHTML += `<div class="list-item" style="padding:10px; font-size:12px;"><div style="flex:1; margin-right:10px;"><div style="font-weight:700; color:var(--text-sub);">${date}</div><div>${n.text}</div></div><i class="fa-solid fa-trash" style="color:#EF4444; cursor:pointer; padding:5px;" onclick="delNotif('${doc.id}')"></i></div>`;
+                });
+            });
+        }
+
+        function delNotif(k) {
+            playClick();
+            if(confirm('Bu duyuruyu silmek istediğine emin misin?')) {
+                db.collection("notifications").doc(k).delete().then(() => { showToast("Duyuru silindi"); renderAdmNotifs(); });
+            }
+        }
     </script>
 </body>
 </html>
