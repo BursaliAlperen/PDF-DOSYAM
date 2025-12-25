@@ -11,9 +11,10 @@
     <!-- 2. ÖDÜLLÜ REKLAM SDK (OnClick TMA - In-Stream) -->
     <script src="https://js.onclckvd.com/in-stream-ad-admanager/tma.js"></script>
 
-    <!-- 3. EKSTRA REKLAMLAR (Popunder/Push - İsterseniz kaldırabilirsiniz, pasif gelir içindir) -->
-    <script async src="https://js.onclckmn.com/static/onclicka.js" data-admpid="406225"></script>
+    <!-- 3. DİĞER REKLAMLAR (Popunder KALDIRILDI - Sorun Çıkarıyordu) -->
+    <!-- Web Push -->
     <script async src="https://js.onclckmn.com/static/onclicka.js" data-admpid="406223"></script>
+    <!-- In-Page Push -->
     <script async src="https://js.onclckmn.com/static/onclicka.js" data-admpid="406221"></script>
 
     <!-- Firebase -->
@@ -38,7 +39,9 @@
         /* Metin seçimini engelle ama inputları serbest bırak */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
         input, textarea { -webkit-user-select: text !important; user-select: text !important; }
-        button, .btn, .nav-item, .side-item, .list-item, .pdf-box { cursor: pointer; pointer-events: auto; }
+        
+        /* Tıklama sorunlarını önlemek için imleç ayarları */
+        button, .btn, .nav-item, .side-item, .list-item, .pdf-box, .cat-item { cursor: pointer; pointer-events: auto; }
 
         ::-webkit-scrollbar { display: none; }
         body { background-color: var(--bg); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
@@ -319,18 +322,22 @@
         function playClick() { realClick.currentTime = 0; realClick.volume = 0.4; realClick.play().catch(()=>{}); }
         function playMsgSound() { msgSound.currentTime = 0; msgSound.volume = 0.5; msgSound.play().catch(()=>{}); }
 
+        // --- REKLAM (ONCLICKA) INIT ---
+        let showAdFn = null;
+
         document.addEventListener('DOMContentLoaded', () => {
-            if (typeof show_10371617 === 'function') { show_10371617({ type: 'inApp', inAppSettings: { frequency: 3, capping: 0.1, interval: 60, timeout: 5, everyPage: false } }); }
+            // Ödüllü Video Başlatma (ID: 405739)
+            if (window.initCdTma) {
+                window.initCdTma({ id: '405739' })
+                .then(show => {
+                    showAdFn = show;
+                    console.log('Ödüllü reklam hazır.');
+                })
+                .catch(e => console.error('Reklam hatası:', e));
+            }
+
             document.querySelectorAll('button, .btn, .nav-item, .side-item, .cat-item, .header-icon-btn').forEach(el => el.addEventListener('click', playClick));
             initChat();
-            
-            // Reklam Motorunu Başlat (Sessizce)
-            if (window.initCdTma) {
-                window.initCdTma({ id: '6103735' }).then(show => {
-                    window.adShowMethod = show;
-                    console.log("Reklam hazır");
-                }).catch(e => console.log("Reklam yüklenemedi:", e));
-            }
         });
 
         firebase.initializeApp(CFG);
@@ -366,15 +373,25 @@
 
         function go(viewId, el) {
             playClick(); 
-            document.querySelectorAll('.view').forEach(x=>x.classList.remove('active')); 
-            document.getElementById('v-'+viewId).classList.add('active'); 
+            // Tüm view class'lı elementleri gizle (display:none)
+            document.querySelectorAll('.view').forEach(x => {
+                x.classList.remove('active');
+            });
+            // İlgili view'i aktif yap (display:block)
+            document.getElementById('v-' + viewId).classList.add('active'); 
+            
             const headerActions = document.getElementById('header-actions');
             if(viewId === 'pdfs') headerActions.style.display = 'flex'; else headerActions.style.display = 'none';
-            if(el) { document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active')); el.classList.add('active'); } 
+            
+            if(el) { 
+                document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active')); 
+                el.classList.add('active'); 
+            } 
             
             isChatActive = (viewId === 'chat');
             const chatBox = document.getElementById('chat-box-container');
             if(isChatActive) { chatBox.style.display = 'flex'; scrollToBottom(); document.getElementById('chat-badge').style.display = 'none'; } else { chatBox.style.display = 'none'; }
+            
             if(viewId === 'home') showToast("Ana Sayfa");
             if(viewId === 'pdfs') showToast("Kütüphane");
             if(viewId === 'chat') showToast("Sohbet Odası");
@@ -452,32 +469,50 @@
         function renderHistory() { let d=document.getElementById('history-list'); let h=JSON.parse(localStorage.getItem('pdf_history') || '[]'); d.innerHTML=''; h.forEach(i=>{d.innerHTML+=`<div class="list-item" onclick="copyText('${i.l}')"><div><b>${i.n}</b><br><small>${new Date(i.d).toLocaleDateString()}</small></div></div>`}); }
         function clearHistory() { if(confirm("Temizlensin mi?")) { localStorage.removeItem('pdf_history'); renderHistory(); showToast("Temizlendi"); } }
         
-        // --- GELİŞMİŞ REKLAM YÖNETİCİSİ (Tek ID: 6103735) ---
-        function watchAdSequence(){ 
+        // --- GELİŞMİŞ REKLAM YÖNETİCİSİ (Tek ID: 405739 / Yedek: 405783) ---
+        const AD_REWARDED_ID = '405739'; 
+        const AD_OTHER_ID = '405783'; 
+
+        async function loadAd() {
+            if (!window.initCdTma) {
+                console.error("Reklam scripti yüklenmedi.");
+                return null;
+            }
+            try {
+                console.log("Ödüllü reklam aranıyor...");
+                let showFn = await window.initCdTma({ id: AD_REWARDED_ID });
+                return showFn;
+            } catch (e) {
+                console.warn("Ödüllü bulunamadı, yedeğe geçiliyor...", e);
+                try {
+                    let showFn = await window.initCdTma({ id: AD_OTHER_ID });
+                    return showFn;
+                } catch (e2) {
+                    console.error("Hiçbir reklam bulunamadı.", e2);
+                    return null;
+                }
+            }
+        }
+
+        async function watchAdSequence(){ 
             playClick(); 
             const btn = document.getElementById('btn-ad');
             btn.innerHTML = 'Yükleniyor...'; 
+            
+            const showFn = await loadAd();
 
-            // Eğer reklam motoru yüklü değilse uyarı ver
-            if (!window.initCdTma) {
-                showToast("Reklam yüklenemedi (AdBlock olabilir).", "error");
+            if(showFn) {
+                showFn().then(() => {
+                    completeAdStep();
+                }).catch(e => {
+                    console.error(e);
+                    showToast("Reklam kapatıldı veya yüklenemedi.", "error");
+                    updateUnlockUI();
+                });
+            } else {
+                showToast("Şu an uygun reklam yok.", "error");
                 updateUnlockUI();
-                return;
             }
-
-            // Reklamı çağır (Varsa window.adShowMethod, yoksa yeniden init et)
-            const adPromise = window.adShowMethod ? 
-                              window.adShowMethod() : 
-                              window.initCdTma({ id: '6103735' }).then(show => { window.adShowMethod = show; return show(); });
-
-            adPromise.then(() => {
-                // Reklam başarıyla izlendi/kapandı
-                completeAdStep();
-            }).catch(e => {
-                console.error(e);
-                showToast("Reklam bulunamadı veya kapatıldı.", "error");
-                updateUnlockUI();
-            });
         }
 
         function completeAdStep() { 
