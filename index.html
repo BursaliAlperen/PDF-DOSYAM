@@ -88,7 +88,7 @@
             align-items: center;
             gap: 10px;
             box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            z-index: 2000; /* En üstte */
+            z-index: 2000;
         }
 
         .chat-inp { flex: 1; border: none; background: transparent; padding: 8px; font-size: 14px; outline: none; }
@@ -162,7 +162,7 @@
     <div class="sidebar" id="sidebar">
         <h3 style="margin-bottom:20px; color:var(--primary);">Kategoriler</h3>
         <div style="flex:1; overflow-y:auto;" id="sb-list"></div>
-        <div style="margin-top:20px; text-align:center; font-size:12px; color:var(--text-sub);">v13.5 Fixed</div>
+        <div style="margin-top:20px; text-align:center; font-size:12px; color:var(--text-sub);">v14.0 Stable</div>
     </div>
 
     <!-- HEADER -->
@@ -244,6 +244,12 @@
             <div style="font-size:12px; opacity:0.7;">TOPLAM REKLAM</div>
             <div style="font-size:28px; font-weight:800; color:#FACC15;" id="st-ads-total">0</div>
         </div>
+        <!-- İSTATİSTİK GRID (3'lü) -->
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:15px;">
+             <div class="pdf-box" style="height:auto; padding:10px;"><span style="font-size:16px; font-weight:800; color:var(--primary);" id="st-users">0</span><span style="font-size:10px; color:var(--text-sub);">Toplam</span></div>
+             <div class="pdf-box" style="height:auto; padding:10px;"><span style="font-size:16px; font-weight:800; color:#10B981;" id="st-active">0</span><span style="font-size:10px; color:var(--text-sub);">Aktif</span></div>
+             <div class="pdf-box" style="height:auto; padding:10px;"><span style="font-size:16px; font-weight:800; color:var(--primary);" id="st-pdfs">0</span><span style="font-size:10px; color:var(--text-sub);">PDF</span></div>
+        </div>
         <div style="display:grid; gap:10px;">
             <button class="btn btn-sec" onclick="openModal('m-pdf')">PDF Yönet</button>
             <button class="btn btn-sec" onclick="openModal('m-users')">Kullanıcılar</button>
@@ -275,11 +281,21 @@
             <input id="ap-c" class="inp" placeholder="Kategori">
             <input id="ap-ads" class="inp" type="number" placeholder="Reklam Sayısı">
             <button class="btn" onclick="addPdf()">Ekle</button>
-            <div onclick="document.getElementById('adm-pdf-c').style.display='block';renderAdmPdfs('')" style="margin-top:10px; cursor:pointer; font-size:12px;">Listeyi Göster</div>
-            <div id="adm-pdf-c" style="display:none; margin-top:10px;"><input class="inp" placeholder="Ara..." oninput="renderAdmPdfs(this.value)"><div id="adm-pdf-list" style="max-height:150px; overflow-y:auto; text-align:left;"></div></div>
+            
+            <!-- PDF LIST TOGGLE -->
+            <div onclick="toggleAdmList()" id="btn-toggle-list" style="margin-top:15px; cursor:pointer; font-size:13px; color:var(--primary); font-weight:600; background:#EEF2FF; padding:8px; border-radius:8px;">
+                <i class="fa-solid fa-list"></i> Listeyi Göster
+            </div>
+            
+            <div id="adm-pdf-c" style="display:none; margin-top:10px;">
+                <input class="inp" placeholder="Ara..." oninput="renderAdmPdfs(this.value)">
+                <div id="adm-pdf-list" style="max-height:150px; overflow-y:auto; text-align:left;"></div>
+            </div>
+            
             <button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">Kapat</button>
         </div>
     </div>
+
     <div id="m-users" class="modal-overlay"><div class="modal-box"><h3>Kullanıcılar</h3><input class="inp" placeholder="Ara..." oninput="renderUsers(this.value)"><div id="adm-user-list" style="max-height:300px; overflow-y:auto; text-align:left; margin-top:10px;"></div><button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">Kapat</button></div></div>
     <div id="m-reqs" class="modal-overlay"><div class="modal-box"><h3>İstekler</h3><div id="adm-req-list" style="max-height:300px; overflow-y:auto; text-align:left; margin-top:10px;"></div><button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">Kapat</button></div></div>
     <div id="m-add-notif" class="modal-overlay"><div class="modal-box"><h3>Duyuru Yönet</h3><textarea id="notif-txt" class="txtarea" placeholder="Duyuru..."></textarea><button class="btn" onclick="sendNotification()">Yayınla</button><div id="adm-notif-list" style="max-height:150px; overflow-y:auto; margin-top:10px;"></div><button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">Kapat</button></div></div>
@@ -346,6 +362,7 @@
             if(ADMIN_IDS.includes(user.id)) document.getElementById('nav-admin').style.display = 'flex';
             if(user.photo_url) document.getElementById('u-avatar-box').innerHTML = `<img src="${user.photo_url}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
             if(user.id !== 0) {
+                // Sadece son görülmeyi güncelle, merge:true ile diğer verileri koru (adCount silinmez)
                 db.collection("users").doc(String(user.id)).set({ name: user.first_name, last: Date.now() }, {merge: true});
                 db.collection("users").doc(String(user.id)).onSnapshot(doc => { if(doc.exists) document.getElementById('my-ad-stat').innerText = doc.data().adCount || 0; });
             }
@@ -370,7 +387,6 @@
             if(el) { document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active')); el.classList.add('active'); } 
             
             isChatActive = (viewId === 'chat');
-            // MESAJ KUTUSUNU SADECE CHAT SAYFASINDA GÖSTER
             const chatBox = document.getElementById('chat-box-container');
             if(isChatActive) {
                 chatBox.style.display = 'flex';
@@ -379,7 +395,6 @@
             } else {
                 chatBox.style.display = 'none';
             }
-            
             showToast(viewId);
         }
 
@@ -494,12 +509,36 @@
         function clearHistory() { if(confirm("Silinsin mi?")) localStorage.removeItem('pdf_history'); renderHistory(); }
         function watchAdSequence(){ playClick(); document.getElementById('btn-ad').innerHTML = '...'; if(typeof show_10371617 === 'function') show_10371617().then(completeAdStep).catch(()=>{showToast("Hata","error");updateUnlockUI();}); else updateUnlockUI(); }
         function completeAdStep() { currentAdStep++; db.collection("stats").doc("ads").set({ count: firebase.firestore.FieldValue.increment(1) }, {merge:true}); if(user.id!==0) db.collection("users").doc(String(user.id)).set({ adCount: firebase.firestore.FieldValue.increment(1) }, {merge:true}); updateUnlockUI(); }
-        function loadStats() { db.collection("users").get().then(s=>document.getElementById('st-users').innerText=s.size); document.getElementById('st-pdfs').innerText=pdfs.length; db.collection("stats").doc("ads").onSnapshot(d=>{if(d.exists)document.getElementById('st-ads-total').innerText=d.data().count||0}); }
+        function loadStats() { 
+            db.collection("users").get().then(s=>document.getElementById('st-users').innerText=s.size); 
+            document.getElementById('st-pdfs').innerText=pdfs.length; 
+            db.collection("stats").doc("ads").onSnapshot(d=>{if(d.exists)document.getElementById('st-ads-total').innerText=d.data().count||0});
+            // Aktif Kullanıcılar (Son 5 dk)
+            const fiveMinAgo = Date.now() - (5 * 60 * 1000);
+            db.collection("users").where('last', '>', fiveMinAgo).get().then(s => {
+                document.getElementById('st-active').innerText = s.size;
+            });
+        }
         function autoDetect(u) { try{document.getElementById('ap-n').value=decodeURIComponent(u.split('?')[0].split('/').pop()).replace(/\.pdf$/i,'');}catch(e){} }
         function openModal(id){ playClick(); document.querySelectorAll('.modal-overlay').forEach(x=>x.style.display='none'); document.getElementById(id).style.display='flex'; if(id==='m-reqs') renderRequests(); if(id==='m-pdf') renderAdmPdfs(''); if(id==='m-users') renderUsers(''); if(id==='m-user-notifs') renderNotifications(); if(id==='m-add-notif') renderAdmNotifs(); }
         function closeM(){ playClick(); document.querySelectorAll('.modal-overlay').forEach(x=>x.style.display='none'); }
         function addPdf(){ const n=document.getElementById('ap-n').value,l=document.getElementById('ap-l').value,c=document.getElementById('ap-c').value,a=document.getElementById('ap-ads').value; if(!n||!l||!c)return; db.collection("pdfs").add({name:n,link:l,cat:c,reqAds:a?Number(a):null,date:Date.now(),downloads:0}).then(()=>{showToast("Eklendi");renderAdmPdfs('');}); }
         function renderAdmPdfs(q){ let d=document.getElementById('adm-pdf-list'); d.innerHTML=''; pdfs.forEach(p=>{ if(p.name.toLowerCase().includes(q)) d.innerHTML+=`<div class="list-item"><span>${p.name}</span> <button class="btn btn-dang" onclick="delPdf('${p.k}')" style="padding:5px 10px; font-size:12px;">Sil</button></div>`; }); }
+        
+        // --- YENİ EKLENEN TOGGLE FONKSİYONU ---
+        function toggleAdmList() {
+            const c = document.getElementById('adm-pdf-c');
+            const btn = document.getElementById('btn-toggle-list');
+            if (c.style.display === 'none') {
+                c.style.display = 'block';
+                btn.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Listeyi Gizle';
+                renderAdmPdfs('');
+            } else {
+                c.style.display = 'none';
+                btn.innerHTML = '<i class="fa-solid fa-list"></i> Listeyi Göster';
+            }
+        }
+
         function delPdf(k){ if(confirm("Silinsin mi?")) db.collection("pdfs").doc(k).delete(); }
         function renderUsers(q){ let d=document.getElementById('adm-user-list'); d.innerHTML='...'; db.collection("users").get().then(s=>{ d.innerHTML=''; s.forEach(doc=>{ let u=doc.data(); if(q===''||(u.name&&u.name.toLowerCase().includes(q))) d.innerHTML+=`<div class="list-item"><b>${u.name||"Adsız"}</b> <small>ID:${doc.id}</small></div>`; }); }); }
         function renderRequests(){ let d=document.getElementById('adm-req-list'); d.innerHTML='...'; db.collection("requests").get().then(s=>{ d.innerHTML=''; s.forEach(doc=>{ let r=doc.data(); d.innerHTML+=`<div class="list-item"><div><b>${r.book}</b><br><small>${r.name}</small></div><button class="btn btn-dang" onclick="delReq('${doc.id}')" style="padding:5px;">Sil</button></div>`; }); }); }
