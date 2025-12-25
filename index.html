@@ -66,8 +66,22 @@
             height: 100%;
         }
 
-        /* SPECIAL CODE PAGE VIEW */
-        #v-code-page { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:9999; padding:20px; text-align:center; flex-direction:column; justify-content:center; align-items:center; }
+        /* SPECIAL CODE PAGE VIEW (FIXED & RESPONSIVE) */
+        #v-code-page { 
+            display:none; 
+            position:fixed; top:0; left:0; width:100%; height:100%; 
+            background:white; z-index:9999; 
+            padding:20px; 
+            text-align:center; 
+            flex-direction:column; justify-content:center; align-items:center; 
+        }
+        #generated-code {
+            background:#F1F5F9; padding:20px; 
+            border-radius:12px; font-size:20px; font-weight:800; letter-spacing:1px; 
+            margin-bottom:20px; border:2px dashed var(--primary);
+            word-break: break-all; /* Taşmayı önler */
+            max-width: 90%; /* Ekran genişliğini aşmaz */
+        }
 
         /* TOAST */
         #toast-container { position: fixed; top: 60px; left: 0; width: 100%; z-index: 9999; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
@@ -172,7 +186,7 @@
     <div id="v-code-page" style="display:none;">
         <h2 style="color:var(--primary); margin-bottom:20px;">Görev Tamamlandı!</h2>
         <p style="margin-bottom:20px; color:var(--text-sub);">Aşağıdaki kodu kopyalayıp uygulamaya geri dönün.</p>
-        <div style="background:#F1F5F9; padding:20px; border-radius:12px; font-size:24px; font-weight:800; letter-spacing:2px; margin-bottom:20px; border:2px dashed var(--primary);" id="generated-code">YÜKLENİYOR...</div>
+        <div id="generated-code">YÜKLENİYOR...</div>
         <button class="btn" onclick="copyGeneratedCode()">Kodu Kopyala</button>
         <div style="margin-top:20px; font-size:12px; color:#aaa;">Bu pencereyi kapatabilirsiniz.</div>
     </div>
@@ -360,7 +374,8 @@
                 <div style="background:#F1F5F9; padding:10px; border-radius:8px; margin-bottom:10px; text-align:left; font-size:12px;">
                     <b>Adım 1:</b> Bu linki oluştur:<br>
                     <button class="btn btn-sec" style="padding:5px; font-size:11px; margin-top:5px;" onclick="generateTaskLink()">Link Üret</button>
-                    <div id="t-generated-link" style="margin-top:5px; word-break:break-all; font-family:monospace; color:blue;"></div>
+                    <!-- Tıklayınca kopyalanan link -->
+                    <div id="t-generated-link" style="margin-top:5px; word-break:break-all; font-family:monospace; color:blue; cursor:pointer;" onclick="copyText(this.innerText)"></div>
                 </div>
                 <input id="t-short-url" class="inp" placeholder="Kısaltılmış Linki Yapıştır">
                 <button class="btn" id="btn-save-task" onclick="saveTask()">Görevi Kaydet</button>
@@ -447,7 +462,7 @@
         let editingPdfId = null;
         let editingTaskId = null;
 
-        // --- PAGE LOGIC ---
+        // --- PAGE LOGIC (TASK VERIFICATION - UNIQUE CODE) ---
         window.onload = () => {
             const urlParams = new URLSearchParams(window.location.search);
             const taskId = urlParams.get('task');
@@ -455,8 +470,13 @@
             if (taskId) {
                 document.getElementById('app-container').style.display = 'none';
                 document.getElementById('v-code-page').style.display = 'flex';
+                
+                // Timestamp eklenerek kod her seferinde farklı olur
                 const secret = "PDFKEY";
-                const raw = `${taskId}_${user.id}_${secret}`;
+                const timestamp = Date.now(); 
+                const raw = `${taskId}_${user.id}_${secret}_${timestamp}`;
+                
+                // Basit ve güvenli kod üretimi
                 const code = btoa(raw).replace(/=/g,''); 
                 document.getElementById('generated-code').innerText = code;
             } else {
@@ -571,22 +591,30 @@
             if(!code) { showToast("Lütfen kodu girin!", "error"); return; }
 
             try {
+                // Kod Çözme: TaskID_UserID_Secret_Timestamp
                 const decoded = atob(code);
-                const secret = "PDFKEY";
-                const expected = `${taskId}_${user.id}_${secret}`;
+                const parts = decoded.split('_');
                 
-                if (decoded === expected) {
+                // Temel doğrulama (TaskID ve UserID eşleşmeli)
+                if (parts[0] === taskId && parts[1] == user.id && parts[2] === "PDFKEY") {
+                    
+                    // Timestamp kontrolü (Opsiyonel: Kodun çok eski olup olmadığına bakılabilir)
+                    // Şimdilik sadece formatı doğruluyoruz.
+
                     const userRef = db.collection("users").doc(String(user.id));
                     userRef.get().then(doc => {
                         const userData = doc.data();
-                        const completed = userData.completedTasks || [];
                         
-                        if(completed.includes(taskId)) {
-                            showToast("Bu görevi zaten yaptınız!", "error");
+                        // Kullanıcının daha önce kullandığı kodları saklıyoruz (Replay Attack Önlemi)
+                        const usedCodes = userData.usedCodes || [];
+                        
+                        if(usedCodes.includes(code)) {
+                            showToast("Bu kod daha önce kullanılmış!", "error");
                         } else {
+                            // Ödülü ver ve kodu kullanılanlar listesine ekle
                             userRef.update({
                                 balance: firebase.firestore.FieldValue.increment(reward),
-                                completedTasks: firebase.firestore.FieldValue.arrayUnion(taskId)
+                                usedCodes: firebase.firestore.FieldValue.arrayUnion(code)
                             }).then(() => {
                                 // İstatistik güncelle
                                 db.collection("stats").doc("tasks").set({count: firebase.firestore.FieldValue.increment(1)}, {merge:true});
@@ -634,7 +662,6 @@
             if(!name || !reward || !shortUrl) { showToast("Eksik bilgi!", "error"); return; }
 
             if (editingTaskId) {
-                // GÜNCELLEME
                 db.collection("tasks").doc(editingTaskId).update({
                     name: name,
                     reward: reward,
@@ -645,7 +672,6 @@
                     renderAdmTasks();
                 });
             } else {
-                // EKLEME
                 const tempId = document.getElementById('t-name').dataset.tempid;
                 if(!tempId) { showToast("Lütfen önce link üretin!", "error"); return; }
                 
@@ -908,15 +934,11 @@
         function sendReq(){ let t=document.getElementById('req-txt').value; if(t) db.collection("requests").add({book:t,name:user.first_name}).then(()=>{showToast("Gönderildi"); closeM();}); else showToast("Kitap adı giriniz!","error"); }
         function sendNotification(){ let t=document.getElementById('notif-txt').value; if(t) db.collection("notifications").add({text:t,date:Date.now()}).then(()=>{showToast("Yayınlandı"); renderAdmNotifs();}); else showToast("Boş bırakılamaz!","error"); }
         function renderNotifications(){ const l=document.getElementById('user-notif-list'); l.innerHTML='...'; db.collection("notifications").orderBy("date","desc").limit(10).get().then(s=>{ l.innerHTML=''; s.forEach(d=>{ l.innerHTML+=`<div class="notif-item"><small>${new Date(d.data().date).toLocaleDateString()}</small><br>${d.data().text}</div>`; }); }); }
-        
         function loadStats() { 
             db.collection("users").get().then(s=>document.getElementById('st-users').innerText=s.size); 
             db.collection("stats").doc("tasks").onSnapshot(d=>{if(d.exists)document.getElementById('st-tasks-total').innerText=d.data().count||0});
-            // Aktif kullanıcılar (Son 5 dk)
             const fiveMinAgo = Date.now() - (5 * 60 * 1000);
-            db.collection("users").where('last', '>', fiveMinAgo).get().then(s => {
-                document.getElementById('st-active-users').innerText = s.size;
-            });
+            db.collection("users").where('last', '>', fiveMinAgo).get().then(s => { document.getElementById('st-active-users').innerText = s.size; });
         }
     </script>
 </body>
