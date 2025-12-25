@@ -32,12 +32,7 @@
         }
 
         /* GÜVENLİK VE SEÇİM ENGELLEME */
-        * { 
-            margin: 0; padding: 0; box-sizing: border-box; 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            -webkit-tap-highlight-color: transparent; 
-            -webkit-user-select: none; user-select: none; 
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
         input, textarea { -webkit-user-select: text !important; user-select: text !important; }
         button, .btn, .nav-item, .side-item, .list-item, .pdf-box, .task-box { cursor: pointer; pointer-events: auto; }
 
@@ -45,42 +40,21 @@
         body { background-color: var(--bg); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
         /* PAGE LOADER */
-        #page-loader {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.95); z-index: 9999;
-            display: none; align-items: center; justify-content: center; flex-direction: column;
-        }
-        .spinner {
-            width: 45px; height: 45px;
-            border: 4px solid var(--border);
-            border-top: 4px solid var(--primary);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
+        #page-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.95); z-index: 9999; display: none; align-items: center; justify-content: center; flex-direction: column; }
+        .spinner { width: 45px; height: 45px; border: 4px solid var(--border); border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         /* VIEW CONTAINER */
-        .view { 
-            flex: 1; 
-            overflow-y: auto; 
-            padding: 20px; 
-            padding-bottom: 120px; 
-            display: none; 
-            opacity: 0; 
-            transition: opacity 0.2s ease; 
-            -webkit-overflow-scrolling: touch; 
-        }
+        .view { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 120px; display: none; opacity: 0; transition: opacity 0.2s ease; -webkit-overflow-scrolling: touch; }
         .view.active { display: block; opacity: 1; }
 
         /* SOHBET ÖZEL VIEW AYARI */
-        #v-chat {
-            display: none; flex-direction: column; height: 100vh; padding: 0; overflow: hidden;
-        }
+        #v-chat { display: none; flex-direction: column; height: 100vh; padding: 0; overflow: hidden; }
         #v-chat.active { display: flex; opacity: 1; }
 
         .chat-feed {
             flex: 1;
-            overflow-y: scroll;
+            overflow-y: scroll !important;
             padding: 15px;
             padding-top: 70px;
             padding-bottom: 100px;
@@ -89,6 +63,7 @@
             gap: 15px;
             scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch;
+            height: 100%;
         }
 
         /* SPECIAL CODE PAGE VIEW */
@@ -107,6 +82,7 @@
         .btn:active { transform: scale(0.97); }
         .btn-sec { background: #EEF2FF; color: var(--primary); }
         .btn-dang { background: #FEF2F2; color: #EF4444; }
+        .btn-edit { background: #FFF7ED; color: #EA580C; }
         .btn-coin { background: var(--coin); color: white; }
         .inp, .txtarea { width: 100%; padding: 14px; border-radius: 16px; border: 2px solid var(--border); background: #fff; margin-bottom: 10px; outline: none; font-size: 14px; }
         .inp:focus { border-color: var(--primary); }
@@ -173,15 +149,20 @@
         .pinned-container { position: absolute; top: 0; left: 0; width: 100%; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); padding: 10px 15px; z-index: 500; display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .pinned-line { width: 3px; height: 30px; background: var(--primary); border-radius: 2px; }
 
-        /* PROFILE LAYOUT FIX */
         .profile-container { display: flex; flex-direction: column; align-items: center; width: 100%; margin-bottom: 20px; }
+        
+        /* ADMIN STATS GRID */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .stats-box { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 10px; text-align: center; }
+        .stats-val { font-size: 18px; font-weight: 800; color: var(--primary); }
+        .stats-label { font-size: 10px; color: var(--text-sub); }
     </style>
 </head>
 <body>
 
     <div id="toast-container"></div>
 
-    <!-- PAGE LOADER (YÜKLENİYOR EKRANI) -->
+    <!-- PAGE LOADER -->
     <div id="page-loader">
         <div class="spinner"></div>
         <div style="margin-top:15px; color:var(--text-main); font-weight:600; font-size:12px;">Yükleniyor...</div>
@@ -287,7 +268,7 @@
             <button class="chat-send-btn" onclick="sendChat()"><i class="fa-solid fa-paper-plane"></i></button>
         </div>
 
-        <!-- 5. PROFILE VIEW (DÜZELTİLDİ) -->
+        <!-- 5. PROFILE VIEW -->
         <div id="v-profile" class="view">
             <div class="profile-container">
                 <div id="u-avatar-box" style="width:100px; height:100px; border-radius:50%; background:var(--white); display:flex; align-items:center; justify-content:center; font-size:40px; color:var(--primary); overflow:hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.05); margin-top:20px;">
@@ -314,7 +295,23 @@
         <!-- 6. ADMIN VIEW -->
         <div id="v-admin" class="view">
             <h2 style="margin-bottom:20px; color:var(--primary);">Yönetici Paneli</h2>
-            <div class="pdf-box" style="height:auto; padding:10px; margin-bottom:15px;"><span style="font-size:16px; font-weight:800; color:var(--primary);" id="st-users">0</span><span style="font-size:10px; color:var(--text-sub);">Toplam Kullanıcı</span></div>
+            
+            <!-- İSTATİSTİKLER -->
+            <div class="stats-grid">
+                <div class="stats-box">
+                    <div class="stats-val" id="st-users">0</div>
+                    <div class="stats-label">Toplam Kullanıcı</div>
+                </div>
+                <div class="stats-box">
+                    <div class="stats-val" id="st-tasks-total">0</div>
+                    <div class="stats-label">Tamamlanan Görev</div>
+                </div>
+                <div class="stats-box">
+                    <div class="stats-val" id="st-active-users">0</div>
+                    <div class="stats-label">Anlık Aktif</div>
+                </div>
+            </div>
+
             <div style="display:grid; gap:10px;">
                 <button class="btn btn-sec" onclick="openModal('m-pdf')">PDF Yönet</button>
                 <button class="btn btn-sec" onclick="openModal('m-tasks')">Görev Yönet</button>
@@ -357,7 +354,7 @@
         <!-- ADMIN TASKS MODAL -->
         <div id="m-tasks" class="modal-overlay">
             <div class="modal-box">
-                <h3>Görev Oluştur</h3>
+                <h3 id="task-modal-title">Görev Oluştur</h3>
                 <input id="t-name" class="inp" placeholder="Görev Adı (Örn: Shortlink 1)">
                 <input id="t-reward" class="inp" type="number" placeholder="Ödül Miktarı (Örn: 10)">
                 <div style="background:#F1F5F9; padding:10px; border-radius:8px; margin-bottom:10px; text-align:left; font-size:12px;">
@@ -366,8 +363,16 @@
                     <div id="t-generated-link" style="margin-top:5px; word-break:break-all; font-family:monospace; color:blue;"></div>
                 </div>
                 <input id="t-short-url" class="inp" placeholder="Kısaltılmış Linki Yapıştır">
-                <button class="btn" onclick="saveTask()">Görevi Kaydet</button>
-                <div id="adm-task-list" style="max-height:150px; overflow-y:auto; text-align:left; margin-top:10px;"></div>
+                <button class="btn" id="btn-save-task" onclick="saveTask()">Görevi Kaydet</button>
+                <div id="task-edit-cancel-box" style="display:none; margin-top:5px;">
+                    <button class="btn btn-sec" onclick="resetTaskForm()">Vazgeç / Yeni Ekle</button>
+                </div>
+                
+                <div onclick="toggleAdmTasks()" id="btn-toggle-tasks" style="margin-top:15px; cursor:pointer; font-size:13px; color:var(--primary); font-weight:600; background:#EEF2FF; padding:8px; border-radius:8px;"><i class="fa-solid fa-list"></i> Listeyi Göster</div>
+                <div id="adm-task-c" style="display:none; margin-top:10px;">
+                    <div id="adm-task-list" style="max-height:150px; overflow-y:auto; text-align:left;"></div>
+                </div>
+
                 <button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">Kapat</button>
             </div>
         </div>
@@ -440,8 +445,9 @@
         let user = tg.initDataUnsafe.user || { id: 0, first_name: "Misafir", last_name: "" };
         let pdfs=[], tasks=[], selPdf=null, balance=0, isChatActive=false, pinnedMsgId=null;
         let editingPdfId = null;
+        let editingTaskId = null;
 
-        // --- PAGE LOGIC (TASK VERIFICATION) ---
+        // --- PAGE LOGIC ---
         window.onload = () => {
             const urlParams = new URLSearchParams(window.location.search);
             const taskId = urlParams.get('task');
@@ -503,7 +509,6 @@
 
         function go(viewId, el) {
             playClick(); 
-            // Loader göster
             const loader = document.getElementById('page-loader');
             loader.style.display = 'flex';
 
@@ -511,7 +516,6 @@
                 x.classList.remove('active');
             });
             
-            // 0.4 saniye bekle (Loader efekti)
             setTimeout(() => {
                 const activeView = document.getElementById('v-' + viewId);
                 activeView.classList.add('active'); 
@@ -531,7 +535,6 @@
                 document.getElementById('chat-box-container').style.display = isChatActive ? 'flex' : 'none';
                 if(isChatActive) { document.getElementById('chat-badge').style.display = 'none'; }
                 
-                // Loader gizle
                 loader.style.display = 'none';
             }, 400);
         }
@@ -585,6 +588,8 @@
                                 balance: firebase.firestore.FieldValue.increment(reward),
                                 completedTasks: firebase.firestore.FieldValue.arrayUnion(taskId)
                             }).then(() => {
+                                // İstatistik güncelle
+                                db.collection("stats").doc("tasks").set({count: firebase.firestore.FieldValue.increment(1)}, {merge:true});
                                 showToast(`Tebrikler! ${reward} jeton kazandınız.`);
                                 codeInput.value = '';
                                 codeInput.disabled = true;
@@ -625,35 +630,102 @@
             const name = document.getElementById('t-name').value;
             const reward = Number(document.getElementById('t-reward').value);
             const shortUrl = document.getElementById('t-short-url').value;
-            const tempId = document.getElementById('t-name').dataset.tempid; 
+            
+            if(!name || !reward || !shortUrl) { showToast("Eksik bilgi!", "error"); return; }
 
-            if(!name || !reward || !shortUrl || !tempId) { showToast("Eksik bilgi!", "error"); return; }
+            if (editingTaskId) {
+                // GÜNCELLEME
+                db.collection("tasks").doc(editingTaskId).update({
+                    name: name,
+                    reward: reward,
+                    url: shortUrl
+                }).then(() => {
+                    showToast("Görev Güncellendi");
+                    resetTaskForm();
+                    renderAdmTasks();
+                });
+            } else {
+                // EKLEME
+                const tempId = document.getElementById('t-name').dataset.tempid;
+                if(!tempId) { showToast("Lütfen önce link üretin!", "error"); return; }
+                
+                db.collection("tasks").doc(tempId).set({
+                    name: name,
+                    reward: reward,
+                    url: shortUrl, 
+                    date: Date.now()
+                }).then(() => {
+                    showToast("Görev Eklendi");
+                    resetTaskForm();
+                    renderAdmTasks();
+                });
+            }
+        }
 
-            db.collection("tasks").doc(tempId).set({
-                name: name,
-                reward: reward,
-                url: shortUrl, 
-                date: Date.now()
-            }).then(() => {
-                showToast("Görev Eklendi");
-                document.getElementById('t-name').value = '';
-                document.getElementById('t-reward').value = '';
-                document.getElementById('t-short-url').value = '';
-                document.getElementById('t-generated-link').innerText = '';
+        function editTask(id) {
+            const t = tasks.find(x => x.k === id);
+            if(!t) return;
+            editingTaskId = id;
+            document.getElementById('t-name').value = t.name;
+            document.getElementById('t-reward').value = t.reward;
+            document.getElementById('t-short-url').value = t.url;
+            generatedTaskLink = `${BASE_URL}/?task=${id}`;
+            document.getElementById('t-generated-link').innerText = generatedTaskLink;
+            document.getElementById('btn-save-task').innerText = "Görevi Güncelle";
+            document.getElementById('btn-save-task').classList.add('btn-edit');
+            document.getElementById('task-modal-title').innerText = "Görev Düzenle";
+            document.getElementById('task-edit-cancel-box').style.display = "block";
+            document.getElementById('adm-task-c').style.display = 'none';
+            document.querySelector('#m-tasks .modal-box').scrollTop = 0;
+        }
+
+        function resetTaskForm() {
+            editingTaskId = null;
+            document.getElementById('t-name').value = '';
+            document.getElementById('t-reward').value = '';
+            document.getElementById('t-short-url').value = '';
+            document.getElementById('t-generated-link').innerText = '';
+            document.getElementById('btn-save-task').innerText = "Görevi Kaydet";
+            document.getElementById('btn-save-task').classList.remove('btn-edit');
+            document.getElementById('task-modal-title').innerText = "Görev Oluştur";
+            document.getElementById('task-edit-cancel-box').style.display = "none";
+        }
+
+        function toggleAdmTasks() {
+            const c = document.getElementById('adm-task-c');
+            const btn = document.getElementById('btn-toggle-tasks');
+            if (c.style.display === 'none') {
+                c.style.display = 'block';
+                btn.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Gizle';
                 renderAdmTasks();
-            });
+            } else {
+                c.style.display = 'none';
+                btn.innerHTML = '<i class="fa-solid fa-list"></i> Listeyi Göster';
+            }
         }
 
         function renderAdmTasks() {
             const div = document.getElementById('adm-task-list');
             div.innerHTML = '';
             tasks.forEach(t => {
-                div.innerHTML += `<div class="list-item"><div>${t.name} (${t.reward} Jeton)</div><button class="btn btn-dang" onclick="delTask('${t.k}')" style="padding:5px 10px;">Sil</button></div>`;
+                const linkToCopy = `${BASE_URL}/?task=${t.k}`;
+                div.innerHTML += `
+                <div class="list-item">
+                    <div style="flex:1; margin-right:10px; overflow:hidden;">
+                        <b>${t.name}</b> (${t.reward} Jeton)
+                        <div style="font-size:10px; color:#aaa; overflow:hidden; text-overflow:ellipsis;">${t.url}</div>
+                    </div>
+                    <div style="display:flex; gap:5px;">
+                        <button class="btn btn-sec" style="padding:5px 10px; font-size:12px;" onclick="copyText('${linkToCopy}')"><i class="fa-solid fa-copy"></i></button>
+                        <button class="btn btn-edit" style="padding:5px 10px; font-size:12px;" onclick="editTask('${t.k}')"><i class="fa-solid fa-pen"></i></button>
+                        <button class="btn btn-dang" onclick="delTask('${t.k}')" style="padding:5px 10px; font-size:12px;"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>`;
             });
         }
         function delTask(id) { if(confirm("Silinsin mi?")) db.collection("tasks").doc(id).delete(); }
 
-        // --- PDF SYSTEM & COIN UNLOCK ---
+        // --- PDF SYSTEM ---
         function filter(c) { playClick(); toggleSidebar(false); document.getElementById('lib-title').innerText=c==='all'?'Tüm Kitaplar':c; renderPdfs(c); go('pdfs',document.querySelectorAll('.nav-item')[1]); }
         function getPdfIcon(c) { let f=CATS.find(x=>x.n===c); return f?f.i:'fa-file-pdf'; }
         function copyText(t) { const el=document.createElement('textarea'); el.value=t; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); showToast("Kopyalandı"); }
@@ -681,19 +753,12 @@
         function render() { renderPdfs('all'); }
         
         function unlockPdf(k){ 
-            playClick(); 
-            selPdf=pdfs.find(x=>x.k===k); 
-            if(isUnlocked(k)) {
-                copyText(selPdf.link);
-                return;
-            }
-            
+            playClick(); selPdf=pdfs.find(x=>x.k===k); 
+            if(isUnlocked(k)) { copyText(selPdf.link); return; }
             const cost = parseInt(selPdf.cost) || 5;
             document.getElementById('unlock-msg').innerText = `Bu kitabı indirmek için ${cost} jeton gerekiyor.`;
-            
             const btn = document.getElementById('btn-unlock-pdf');
             btn.onclick = () => processUnlock(selPdf, cost);
-            
             openModal('m-unlock'); 
         }
 
@@ -702,18 +767,12 @@
                 db.collection("users").doc(String(user.id)).update({
                     balance: firebase.firestore.FieldValue.increment(-cost)
                 }).then(() => {
-                    addToHistory(pdf);
-                    setUnlocked(pdf.k);
+                    addToHistory(pdf); setUnlocked(pdf.k);
                     db.collection("pdfs").doc(pdf.k).update({downloads:firebase.firestore.FieldValue.increment(1)});
-                    copyText(pdf.link);
-                    showToast("Kilit açıldı! Link kopyalandı.");
-                    closeM();
-                    renderPdfs('all');
+                    copyText(pdf.link); showToast("Kilit açıldı! Link kopyalandı."); closeM(); renderPdfs('all');
                 });
             } else {
-                showToast("Yetersiz jeton! Görev yaparak kazan.", "error");
-                closeM();
-                go('earn', document.querySelectorAll('.nav-item')[2]);
+                showToast("Yetersiz jeton!", "error"); closeM(); go('earn', document.querySelectorAll('.nav-item')[2]);
             }
         }
 
@@ -755,7 +814,9 @@
                 });
                 
                 if(!isChatActive && unread > 0) { const b=document.getElementById('chat-badge'); let cur=parseInt(b.innerText)||0; let tot=cur+unread; b.innerText=tot>99?'99+':'+'+tot; b.style.display='flex'; }
-                if(isChatActive) scrollToBottom();
+                
+                setTimeout(scrollToBottom, 100);
+
             }, (error) => {
                 console.error("Chat Error:", error);
                 document.getElementById('chat-feed').innerHTML = '<div style="text-align:center; color:red;">Sohbet yüklenemedi.</div>';
@@ -780,7 +841,7 @@
         
         function scrollToBottom() { 
             const v = document.getElementById('chat-feed'); 
-            setTimeout(() => v.scrollTop = v.scrollHeight, 100); 
+            if(v) v.scrollTop = v.scrollHeight; 
         }
 
         // --- ADMIN & MISC ---
@@ -817,7 +878,7 @@
             if(id==='m-users') renderUsers(''); 
             if(id==='m-user-notifs') renderNotifications(); 
             if(id==='m-add-notif') renderAdmNotifs(); 
-            if(id==='m-tasks') renderAdmTasks(); 
+            if(id==='m-tasks') { renderAdmTasks(); document.getElementById('adm-task-c').style.display='none'; document.getElementById('btn-toggle-tasks').innerHTML='<i class="fa-solid fa-list"></i> Listeyi Göster'; } 
         }
 
         function closeM(){ 
@@ -847,7 +908,16 @@
         function sendReq(){ let t=document.getElementById('req-txt').value; if(t) db.collection("requests").add({book:t,name:user.first_name}).then(()=>{showToast("Gönderildi"); closeM();}); else showToast("Kitap adı giriniz!","error"); }
         function sendNotification(){ let t=document.getElementById('notif-txt').value; if(t) db.collection("notifications").add({text:t,date:Date.now()}).then(()=>{showToast("Yayınlandı"); renderAdmNotifs();}); else showToast("Boş bırakılamaz!","error"); }
         function renderNotifications(){ const l=document.getElementById('user-notif-list'); l.innerHTML='...'; db.collection("notifications").orderBy("date","desc").limit(10).get().then(s=>{ l.innerHTML=''; s.forEach(d=>{ l.innerHTML+=`<div class="notif-item"><small>${new Date(d.data().date).toLocaleDateString()}</small><br>${d.data().text}</div>`; }); }); }
-        function loadStats() { db.collection("users").get().then(s=>document.getElementById('st-users').innerText=s.size); }
+        
+        function loadStats() { 
+            db.collection("users").get().then(s=>document.getElementById('st-users').innerText=s.size); 
+            db.collection("stats").doc("tasks").onSnapshot(d=>{if(d.exists)document.getElementById('st-tasks-total').innerText=d.data().count||0});
+            // Aktif kullanıcılar (Son 5 dk)
+            const fiveMinAgo = Date.now() - (5 * 60 * 1000);
+            db.collection("users").where('last', '>', fiveMinAgo).get().then(s => {
+                document.getElementById('st-active-users').innerText = s.size;
+            });
+        }
     </script>
 </body>
 </html>
