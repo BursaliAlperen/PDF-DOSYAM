@@ -7,8 +7,11 @@
     
     <!-- 1. Telegram SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
+
+    <!-- 2. TADDY SDK -->
+    <script src="https://sdk.taddy.pro/web/taddy.min.js" data-pub-id="eb86a0cbc605b452a8b5601883cefc19"></script>
     
-    <!-- 2. REKLAM SDK -->
+    <!-- 3. Diğer REKLAM SDK -->
     <script src='//libtl.com/sdk.js' data-zone='10371617' data-sdk='show_10371617'></script>
     
     <!-- Firebase -->
@@ -30,7 +33,31 @@
             --border: #E2E8F0;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+        /* Metin seçimini engelle ama etkileşimi bozma */
+        * { 
+            margin: 0; padding: 0; box-sizing: border-box; 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+            -webkit-user-select: none; /* Chrome/Safari */
+            -moz-user-select: none; /* Firefox */
+            -ms-user-select: none; /* IE10+ */
+            user-select: none; /* Standart */
+        }
+        
+        /* Input ve Textarea yazılabilir olmalı */
+        input, textarea {
+            -webkit-user-select: text !important;
+            -moz-user-select: text !important;
+            -ms-user-select: text !important;
+            user-select: text !important;
+        }
+
+        /* Butonların tıklanabilir olduğundan emin ol */
+        button, .btn, .nav-item, .side-item, .cat-item, .header-icon-btn, .pdf-box {
+            cursor: pointer;
+            pointer-events: auto;
+        }
+
         ::-webkit-scrollbar { display: none; }
         
         body { background-color: var(--bg); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
@@ -46,6 +73,7 @@
             border-radius: 50px; margin-bottom: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             font-size: 14px; font-weight: 600; animation: slideDown 0.4s; pointer-events: auto;
         }
+        .toast.error { background: rgba(220, 38, 38, 0.95); }
         .toast.hiding { animation: slideUp 0.4s forwards; }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideUp { to { opacity: 0; transform: translateY(-20px); } }
@@ -71,26 +99,12 @@
         #v-chat { padding: 0; padding-bottom: 180px; background: #F1F5F9; position: relative; }
         .chat-feed { padding: 15px; display: flex; flex-direction: column; gap: 15px; padding-top: 60px; }
         
-        /* CHAT INPUT BOX (SABİT) */
         .chat-input-box {
-            position: fixed;
-            bottom: 110px; /* Navigasyonun hemen üstünde */
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90%;
-            max-width: 400px;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border);
-            padding: 10px;
-            border-radius: 20px;
-            display: none; /* Başlangıçta gizli */
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            z-index: 2000;
+            position: fixed; bottom: 110px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px;
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid var(--border);
+            padding: 10px; border-radius: 20px; display: none; align-items: center; gap: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1); z-index: 2000;
         }
-
         .chat-inp { flex: 1; border: none; background: transparent; padding: 8px; font-size: 14px; outline: none; }
         .chat-send-btn { width: 36px; height: 36px; background: var(--primary); color: white; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
 
@@ -113,7 +127,6 @@
         .msg-actions { display:flex; gap:5px; margin-left:auto; }
         .msg-btn { font-size:10px; cursor:pointer; padding:2px 5px; border-radius:4px; transition:0.2s; }
 
-        /* PIN BAR */
         .pinned-container {
             position: absolute; top: 0; left: 0; width: 100%;
             background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
@@ -123,14 +136,12 @@
         }
         .pinned-line { width: 3px; height: 30px; background: var(--primary); border-radius: 2px; }
 
-        /* NAV */
         .nav-container { position: fixed; bottom: 35px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; z-index: 1000; }
         .nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-radius: 24px; display: flex; justify-content: space-around; padding: 14px; box-shadow: 0 20px 50px -10px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.6); }
         .nav-item { font-size: 24px; color: #CBD5E1; transition: 0.3s; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 14px; position: relative; }
         .nav-item.active { color: var(--primary); background: #EEF2FF; }
         .nav-badge { position: absolute; top: 5px; right: 5px; background: #EF4444; color: white; font-size: 10px; font-weight: 800; min-width: 18px; height: 18px; border-radius: 9px; display: flex; align-items: center; justify-content: center; padding: 0 4px; box-shadow: 0 2px 5px rgba(239, 68, 68, 0.4); border: 2px solid #fff; }
 
-        /* LISTS & MODALS */
         .pdf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .pdf-box { background: var(--white); padding: 15px; border-radius: 20px; text-align: center; border: 1px solid var(--border); height: 185px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; transition: 0.2s; }
         .pdf-thumb { width: 45px; height: 45px; background: #EEF2FF; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 20px; margin-bottom: 8px; }
@@ -211,7 +222,7 @@
         <div id="chat-feed" class="chat-feed"><div style="text-align:center; color:#94A3B8;">Sohbet yükleniyor...</div></div>
     </div>
 
-    <!-- CHAT INPUT BOX (GLOBAL AMA SADECE SOHBETTE GÖRÜNÜR) -->
+    <!-- CHAT INPUT BOX -->
     <div id="chat-box-container" class="chat-input-box">
         <input type="text" id="chat-msg-in" class="chat-inp" placeholder="Mesaj yaz..." onkeypress="if(event.key==='Enter') sendChat()">
         <button class="chat-send-btn" onclick="sendChat()"><i class="fa-solid fa-paper-plane"></i></button>
@@ -282,11 +293,9 @@
             <input id="ap-ads" class="inp" type="number" placeholder="Reklam Sayısı">
             <button class="btn" onclick="addPdf()">Ekle</button>
             
-            <!-- PDF LIST TOGGLE -->
             <div onclick="toggleAdmList()" id="btn-toggle-list" style="margin-top:15px; cursor:pointer; font-size:13px; color:var(--primary); font-weight:600; background:#EEF2FF; padding:8px; border-radius:8px;">
                 <i class="fa-solid fa-list"></i> Listeyi Göster
             </div>
-            
             <div id="adm-pdf-c" style="display:none; margin-top:10px;">
                 <input class="inp" placeholder="Ara..." oninput="renderAdmPdfs(this.value)">
                 <div id="adm-pdf-list" style="max-height:150px; overflow-y:auto; text-align:left;"></div>
@@ -316,6 +325,22 @@
     </div>
 
     <script>
+        // --- GÜVENLİK KODLARI ---
+        
+        // 1. Sağ Tık Engelleme (Menü açılmaz)
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // 2. Kısayol Tuşları Engelleme (F12, Ctrl+U, Ctrl+Shift+I vb.)
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) return false; // F12
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false; // Ctrl+Shift+I
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false; // Ctrl+Shift+J
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; // Ctrl+U
+            if(e.ctrlKey && e.keyCode == 'S'.charCodeAt(0)) return false; // Ctrl+S
+        }
+        
+        // *NOT:* "debugger" döngüsü kaldırıldı çünkü arayüzü kilitliyordu.
+
         const CFG = {
             apiKey: "AIzaSyDCR9nLVp57rZjR5cZSin1Mc311xiJNMvc",
             authDomain: "pdfdosyam-2def4.firebaseapp.com",
@@ -362,7 +387,6 @@
             if(ADMIN_IDS.includes(user.id)) document.getElementById('nav-admin').style.display = 'flex';
             if(user.photo_url) document.getElementById('u-avatar-box').innerHTML = `<img src="${user.photo_url}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
             if(user.id !== 0) {
-                // Sadece son görülmeyi güncelle, merge:true ile diğer verileri koru (adCount silinmez)
                 db.collection("users").doc(String(user.id)).set({ name: user.first_name, last: Date.now() }, {merge: true});
                 db.collection("users").doc(String(user.id)).onSnapshot(doc => { if(doc.exists) document.getElementById('my-ad-stat').innerText = doc.data().adCount || 0; });
             }
@@ -395,7 +419,10 @@
             } else {
                 chatBox.style.display = 'none';
             }
-            showToast(viewId);
+            if(viewId === 'home') showToast("Ana Sayfa");
+            if(viewId === 'pdfs') showToast("Kütüphane");
+            if(viewId === 'chat') showToast("Sohbet Odası");
+            if(viewId === 'profile') showToast("Profilim");
         }
 
         // --- CHAT ---
@@ -465,24 +492,31 @@
         function sendChat() {
             const i = document.getElementById('chat-msg-in'); const t = i.value.trim(); if(!t) return;
             let bad=false; for(let w of BAD_WORDS) if(new RegExp(`\\b${w}\\b`,'i').test(t)) bad=true;
-            if(bad) { showToast("Uygunsuz kelime!", "error"); return; }
+            if(bad) { showToast("Mesajınız uygunsuz içerik barındırıyor!", "error"); return; }
             playMsgSound();
             db.collection("messages").add({ text: t, senderId: user.id, senderName: user.first_name, photo: user.photo_url || null, timestamp: Date.now(), readBy: [] });
             i.value = ''; scrollToBottom();
         }
-        function deleteMsg(id) { if(confirm("Silinsin mi?")) db.collection("messages").doc(id).delete(); }
-        function pinMsg(id, t) { if(confirm("Sabitlensin mi?")) { db.collection("settings").doc("chat").set({ pinnedId: id, pinnedText: t }, {merge:true}); showToast("Sabitlendi"); } }
-        function unpinMsg(e) { e.stopPropagation(); if(confirm("Kaldırılsın mı?")) db.collection("settings").doc("chat").update({ pinnedId: null, pinnedText: null }); }
+        function deleteMsg(id) { if(confirm("Bu mesajı silmek istediğinize emin misiniz?")) { db.collection("messages").doc(id).delete().then(()=>showToast("Mesaj silindi.")); } }
+        function pinMsg(id, t) { if(confirm("Bu mesajı sabitlemek istiyor musunuz?")) { db.collection("settings").doc("chat").set({ pinnedId: id, pinnedText: t }, {merge:true}); showToast("Mesaj sabitlendi."); } }
+        function unpinMsg(e) { e.stopPropagation(); if(confirm("Sabitlemeyi kaldırmak istiyor musunuz?")) { db.collection("settings").doc("chat").update({ pinnedId: null, pinnedText: null }); showToast("Sabitleme kaldırıldı."); } }
         function jumpToPin() { if(!pinnedMsgId) return; const el=document.getElementById('msg-'+pinnedMsgId); if(el){ el.scrollIntoView({behavior:"smooth",block:"center"}); el.style.transform="scale(1.1)"; setTimeout(()=>el.style.transform="scale(1)",500); } }
         function markAsRead(id) { db.collection("messages").doc(id).update({ readBy: firebase.firestore.FieldValue.arrayUnion(user.id) }); }
         function scrollToBottom() { const v = document.getElementById('v-chat'); setTimeout(() => { v.scrollTop = v.scrollHeight; }, 100); }
 
         // --- CORE ---
         function toggleSidebar(o) { playClick(); if(o) { document.getElementById('sidebar').classList.add('open'); document.getElementById('sb-overlay').style.display='block'; } else { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sb-overlay').style.display='none'; } }
-        function showToast(msg, type='success') { const t = document.createElement('div'); t.className = 'toast'; t.innerHTML = msg; document.getElementById('toast-container').appendChild(t); setTimeout(() => { t.classList.add('hiding'); setTimeout(()=>t.remove(), 400); }, 3000); }
+        function showToast(msg, type='success') { 
+            const t = document.createElement('div'); 
+            t.className = 'toast'; 
+            if(type === 'error') t.classList.add('error');
+            t.innerHTML = msg; 
+            document.getElementById('toast-container').appendChild(t); 
+            setTimeout(() => { t.classList.add('hiding'); setTimeout(()=>t.remove(), 400); }, 3000); 
+        }
         function filter(c) { playClick(); toggleSidebar(false); document.getElementById('lib-title').innerText = c==='all'?'Tüm Kitaplar':c; renderPdfs(c); go('pdfs', document.querySelectorAll('.nav-item')[1]); }
         function getPdfIcon(c) { let f=CATS.find(x=>x.n===c); return f?f.i:'fa-file-pdf'; }
-        function copyText(t) { const el = document.createElement('textarea'); el.value = t; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); showToast("Kopyalandı"); }
+        function copyText(t) { const el = document.createElement('textarea'); el.value = t; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); showToast("Bağlantı kopyalandı!"); }
         function isUnlocked(id) { return (JSON.parse(localStorage.getItem('unlocked_pdfs') || '[]')).includes(id); }
         function setUnlocked(id) { let u = JSON.parse(localStorage.getItem('unlocked_pdfs') || '[]'); if(!u.includes(id)) { u.push(id); localStorage.setItem('unlocked_pdfs', JSON.stringify(u)); } }
         function renderPdfs(c) {
@@ -506,14 +540,13 @@
         }
         function addToHistory(p) { let h = JSON.parse(localStorage.getItem('pdf_history') || '[]'); h=h.filter(x=>x.n!==p.name); h.unshift({n:p.name,l:p.link,d:Date.now()}); if(h.length>20)h.pop(); localStorage.setItem('pdf_history', JSON.stringify(h)); }
         function renderHistory() { let d=document.getElementById('history-list'); let h=JSON.parse(localStorage.getItem('pdf_history') || '[]'); d.innerHTML=''; h.forEach(i=>{d.innerHTML+=`<div class="list-item" onclick="copyText('${i.l}')"><div><b>${i.n}</b><br><small>${new Date(i.d).toLocaleDateString()}</small></div></div>`}); }
-        function clearHistory() { if(confirm("Silinsin mi?")) localStorage.removeItem('pdf_history'); renderHistory(); }
-        function watchAdSequence(){ playClick(); document.getElementById('btn-ad').innerHTML = '...'; if(typeof show_10371617 === 'function') show_10371617().then(completeAdStep).catch(()=>{showToast("Hata","error");updateUnlockUI();}); else updateUnlockUI(); }
+        function clearHistory() { if(confirm("Tüm geçmişi temizlemek istediğinize emin misiniz?")) { localStorage.removeItem('pdf_history'); renderHistory(); showToast("Geçmiş temizlendi."); } }
+        function watchAdSequence(){ playClick(); document.getElementById('btn-ad').innerHTML = '...'; if(typeof show_10371617 === 'function') show_10371617().then(completeAdStep).catch(()=>{showToast("Reklam yüklenirken bir sorun oluştu.","error");updateUnlockUI();}); else updateUnlockUI(); }
         function completeAdStep() { currentAdStep++; db.collection("stats").doc("ads").set({ count: firebase.firestore.FieldValue.increment(1) }, {merge:true}); if(user.id!==0) db.collection("users").doc(String(user.id)).set({ adCount: firebase.firestore.FieldValue.increment(1) }, {merge:true}); updateUnlockUI(); }
         function loadStats() { 
             db.collection("users").get().then(s=>document.getElementById('st-users').innerText=s.size); 
             document.getElementById('st-pdfs').innerText=pdfs.length; 
             db.collection("stats").doc("ads").onSnapshot(d=>{if(d.exists)document.getElementById('st-ads-total').innerText=d.data().count||0});
-            // Aktif Kullanıcılar (Son 5 dk)
             const fiveMinAgo = Date.now() - (5 * 60 * 1000);
             db.collection("users").where('last', '>', fiveMinAgo).get().then(s => {
                 document.getElementById('st-active').innerText = s.size;
@@ -522,10 +555,13 @@
         function autoDetect(u) { try{document.getElementById('ap-n').value=decodeURIComponent(u.split('?')[0].split('/').pop()).replace(/\.pdf$/i,'');}catch(e){} }
         function openModal(id){ playClick(); document.querySelectorAll('.modal-overlay').forEach(x=>x.style.display='none'); document.getElementById(id).style.display='flex'; if(id==='m-reqs') renderRequests(); if(id==='m-pdf') renderAdmPdfs(''); if(id==='m-users') renderUsers(''); if(id==='m-user-notifs') renderNotifications(); if(id==='m-add-notif') renderAdmNotifs(); }
         function closeM(){ playClick(); document.querySelectorAll('.modal-overlay').forEach(x=>x.style.display='none'); }
-        function addPdf(){ const n=document.getElementById('ap-n').value,l=document.getElementById('ap-l').value,c=document.getElementById('ap-c').value,a=document.getElementById('ap-ads').value; if(!n||!l||!c)return; db.collection("pdfs").add({name:n,link:l,cat:c,reqAds:a?Number(a):null,date:Date.now(),downloads:0}).then(()=>{showToast("Eklendi");renderAdmPdfs('');}); }
+        function addPdf(){ 
+            const n=document.getElementById('ap-n').value,l=document.getElementById('ap-l').value,c=document.getElementById('ap-c').value,a=document.getElementById('ap-ads').value; 
+            if(!n||!l||!c) { showToast("Lütfen tüm alanları (Ad, Link, Kategori) doldurun!", "error"); return; }
+            db.collection("pdfs").add({name:n,link:l,cat:c,reqAds:a?Number(a):null,date:Date.now(),downloads:0}).then(()=>{showToast("PDF başarıyla eklendi."); renderAdmPdfs('');}); 
+        }
         function renderAdmPdfs(q){ let d=document.getElementById('adm-pdf-list'); d.innerHTML=''; pdfs.forEach(p=>{ if(p.name.toLowerCase().includes(q)) d.innerHTML+=`<div class="list-item"><span>${p.name}</span> <button class="btn btn-dang" onclick="delPdf('${p.k}')" style="padding:5px 10px; font-size:12px;">Sil</button></div>`; }); }
         
-        // --- YENİ EKLENEN TOGGLE FONKSİYONU ---
         function toggleAdmList() {
             const c = document.getElementById('adm-pdf-c');
             const btn = document.getElementById('btn-toggle-list');
@@ -539,14 +575,22 @@
             }
         }
 
-        function delPdf(k){ if(confirm("Silinsin mi?")) db.collection("pdfs").doc(k).delete(); }
+        function delPdf(k){ if(confirm("Bu PDF'i silmek istediğinize emin misiniz?")) db.collection("pdfs").doc(k).delete().then(()=>showToast("PDF silindi.")); }
         function renderUsers(q){ let d=document.getElementById('adm-user-list'); d.innerHTML='...'; db.collection("users").get().then(s=>{ d.innerHTML=''; s.forEach(doc=>{ let u=doc.data(); if(q===''||(u.name&&u.name.toLowerCase().includes(q))) d.innerHTML+=`<div class="list-item"><b>${u.name||"Adsız"}</b> <small>ID:${doc.id}</small></div>`; }); }); }
         function renderRequests(){ let d=document.getElementById('adm-req-list'); d.innerHTML='...'; db.collection("requests").get().then(s=>{ d.innerHTML=''; s.forEach(doc=>{ let r=doc.data(); d.innerHTML+=`<div class="list-item"><div><b>${r.book}</b><br><small>${r.name}</small></div><button class="btn btn-dang" onclick="delReq('${doc.id}')" style="padding:5px;">Sil</button></div>`; }); }); }
-        function delReq(id){ if(confirm("Silinsin mi?")) db.collection("requests").doc(id).delete().then(renderRequests); }
+        function delReq(id){ if(confirm("Bu isteği silmek istediğinize emin misiniz?")) db.collection("requests").doc(id).delete().then(()=>{renderRequests(); showToast("İstek silindi.");}); }
         function renderAdmNotifs(){ let d=document.getElementById('adm-notif-list'); d.innerHTML='...'; db.collection("notifications").orderBy("date","desc").get().then(s=>{ d.innerHTML=''; s.forEach(doc=>{ let n=doc.data(); d.innerHTML+=`<div class="list-item"><div>${n.text}</div><button class="btn btn-dang" onclick="delNotif('${doc.id}')" style="padding:5px;">Sil</button></div>`; }); }); }
-        function delNotif(k){ if(confirm("Silinsin mi?")) db.collection("notifications").doc(k).delete().then(renderAdmNotifs); }
-        function sendReq(){ let t=document.getElementById('req-txt').value; if(t) db.collection("requests").add({book:t,name:user.first_name}).then(()=>{showToast("Gönderildi");closeM();}); }
-        function sendNotification(){ let t=document.getElementById('notif-txt').value; if(t) db.collection("notifications").add({text:t,date:Date.now()}).then(()=>{showToast("Yayınlandı");renderAdmNotifs();}); }
+        function delNotif(k){ if(confirm("Bu duyuruyu silmek istediğinize emin misiniz?")) db.collection("notifications").doc(k).delete().then(()=>{renderAdmNotifs(); showToast("Duyuru silindi.");}); }
+        function sendReq(){ 
+            let t=document.getElementById('req-txt').value; 
+            if(t) db.collection("requests").add({book:t,name:user.first_name}).then(()=>{showToast("İsteğiniz başarıyla gönderildi."); closeM();}); 
+            else showToast("Lütfen bir kitap veya PDF adı yazın!", "error");
+        }
+        function sendNotification(){ 
+            let t=document.getElementById('notif-txt').value; 
+            if(t) db.collection("notifications").add({text:t,date:Date.now()}).then(()=>{showToast("Duyuru başarıyla yayınlandı."); renderAdmNotifs();}); 
+            else showToast("Duyuru metni boş olamaz!", "error");
+        }
         function renderNotifications(){ const l=document.getElementById('user-notif-list'); l.innerHTML='...'; db.collection("notifications").orderBy("date","desc").limit(10).get().then(s=>{ l.innerHTML=''; s.forEach(d=>{ l.innerHTML+=`<div class="notif-item"><small>${new Date(d.data().date).toLocaleDateString()}</small><br>${d.data().text}</div>`; }); }); }
     </script>
 </body>
