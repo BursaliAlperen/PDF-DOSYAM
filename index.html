@@ -31,13 +31,35 @@
             --coin: #F59E0B;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
+        /* GÜVENLİK VE SEÇİM ENGELLEME */
+        * { 
+            margin: 0; padding: 0; box-sizing: border-box; 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+            -webkit-user-select: none; user-select: none; 
+        }
         input, textarea { -webkit-user-select: text !important; user-select: text !important; }
         button, .btn, .nav-item, .side-item, .list-item, .pdf-box, .task-box { cursor: pointer; pointer-events: auto; }
 
         ::-webkit-scrollbar { display: none; }
         body { background-color: var(--bg); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
+        /* PAGE LOADER */
+        #page-loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.95); z-index: 9999;
+            display: none; align-items: center; justify-content: center; flex-direction: column;
+        }
+        .spinner {
+            width: 45px; height: 45px;
+            border: 4px solid var(--border);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* VIEW CONTAINER */
         .view { 
             flex: 1; 
             overflow-y: auto; 
@@ -46,12 +68,31 @@
             display: none; 
             opacity: 0; 
             transition: opacity 0.2s ease; 
-            -webkit-overflow-scrolling: touch; /* Mobil kaydırma düzeltmesi */
+            -webkit-overflow-scrolling: touch; 
         }
         .view.active { display: block; opacity: 1; }
 
+        /* SOHBET ÖZEL VIEW AYARI */
+        #v-chat {
+            display: none; flex-direction: column; height: 100vh; padding: 0; overflow: hidden;
+        }
+        #v-chat.active { display: flex; opacity: 1; }
+
+        .chat-feed {
+            flex: 1;
+            overflow-y: scroll;
+            padding: 15px;
+            padding-top: 70px;
+            padding-bottom: 100px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
         /* SPECIAL CODE PAGE VIEW */
-        #v-code-page { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:9999; padding:20px; text-align:center; display:flex; flex-direction:column; justify-content:center; align-items:center; }
+        #v-code-page { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:9999; padding:20px; text-align:center; flex-direction:column; justify-content:center; align-items:center; }
 
         /* TOAST */
         #toast-container { position: fixed; top: 60px; left: 0; width: 100%; z-index: 9999; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
@@ -103,57 +144,15 @@
         .sidebar.open { left: 0; }
         .side-item { padding: 12px; border-radius: 12px; display: flex; align-items: center; gap: 12px; font-weight: 600; color: var(--text-sub); margin-bottom: 5px; cursor: pointer; }
         
-        /* --- GÜNCELLENMİŞ MODAL ANİMASYONLARI --- */
-        .modal-overlay { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.6); z-index: 3000; 
-            display: none; align-items: center; justify-content: center; backdrop-filter: blur(3px); 
-            opacity: 0; transition: opacity 0.3s ease; /* Fade transition */
-        }
-        .modal-overlay.active { 
-            display: flex; 
-            opacity: 1; 
-        }
-        .modal-overlay.closing {
-            opacity: 0; /* Kapanırken opacity 0'a iner */
-        }
+        /* MODAL ANIMATION */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(3px); opacity: 0; transition: opacity 0.3s ease; }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-overlay.closing { opacity: 0; }
+        .modal-box { background: var(--white); width: 85%; max-width: 350px; border-radius: 24px; padding: 24px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.2); margin-bottom: 50px; transform: scale(0.8); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .modal-overlay.active .modal-box { transform: scale(1); }
+        .modal-overlay.closing .modal-box { transform: scale(0.8); }
 
-        .modal-box { 
-            background: var(--white); width: 85%; max-width: 350px; 
-            border-radius: 24px; padding: 24px; text-align: center; 
-            box-shadow: 0 20px 60px rgba(0,0,0,0.2); margin-bottom: 50px; 
-            transform: scale(0.8); 
-            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* Pop efektli geçiş */
-        }
-        .modal-overlay.active .modal-box { 
-            transform: scale(1); /* Açılınca tam boyut */
-        }
-        .modal-overlay.closing .modal-box {
-            transform: scale(0.8); /* Kapanırken küçülür */
-        }
-
-        /* --- CHAT SCROLL FIX --- */
-        #v-chat { 
-            padding: 0; 
-            padding-bottom: 120px; 
-            background: #F1F5F9; 
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            overflow-y: hidden; /* Scroll'u container'dan alıp feed'e veriyoruz */
-        }
-        .chat-feed { 
-            flex: 1;
-            padding: 15px; 
-            padding-top: 60px; 
-            padding-bottom: 20px; /* Input'un arkasında kalmaması için */
-            display: flex; 
-            flex-direction: column; 
-            gap: 15px; 
-            overflow-y: auto; /* Kaydırma burada aktif */
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch; /* Mobil için smooth scroll */
-        }
+        /* CHAT BUBBLES */
         .chat-input-box { position: fixed; bottom: 110px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid var(--border); padding: 10px; border-radius: 20px; display: none; align-items: center; gap: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); z-index: 2000; }
         .chat-inp { flex: 1; border: none; background: transparent; padding: 8px; font-size: 14px; outline: none; }
         .chat-send-btn { width: 36px; height: 36px; background: var(--primary); color: white; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
@@ -173,11 +172,20 @@
 
         .pinned-container { position: absolute; top: 0; left: 0; width: 100%; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); padding: 10px 15px; z-index: 500; display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .pinned-line { width: 3px; height: 30px; background: var(--primary); border-radius: 2px; }
+
+        /* PROFILE LAYOUT FIX */
+        .profile-container { display: flex; flex-direction: column; align-items: center; width: 100%; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
     <div id="toast-container"></div>
+
+    <!-- PAGE LOADER (YÜKLENİYOR EKRANI) -->
+    <div id="page-loader">
+        <div class="spinner"></div>
+        <div style="margin-top:15px; color:var(--text-main); font-weight:600; font-size:12px;">Yükleniyor...</div>
+    </div>
 
     <!-- CODE GENERATION PAGE -->
     <div id="v-code-page" style="display:none;">
@@ -279,23 +287,27 @@
             <button class="chat-send-btn" onclick="sendChat()"><i class="fa-solid fa-paper-plane"></i></button>
         </div>
 
-        <!-- 5. PROFILE VIEW -->
+        <!-- 5. PROFILE VIEW (DÜZELTİLDİ) -->
         <div id="v-profile" class="view">
-            <div style="text-align:center; margin:30px 0;">
-                <div id="u-avatar-box" style="width:100px; height:100px; border-radius:50%; background:var(--white); margin:0 auto 15px; display:flex; align-items:center; justify-content:center; font-size:40px; color:var(--primary); overflow:hidden;">
+            <div class="profile-container">
+                <div id="u-avatar-box" style="width:100px; height:100px; border-radius:50%; background:var(--white); display:flex; align-items:center; justify-content:center; font-size:40px; color:var(--primary); overflow:hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.05); margin-top:20px;">
                     <i class="fa-solid fa-user-astronaut"></i>
                 </div>
-                <h3>Profil</h3>
+                <h3 style="margin-top:15px; font-size:22px;">Profilim</h3>
             </div>
+            
             <div style="background:var(--white); padding:15px; border-radius:12px; text-align:center; border:1px solid var(--border); margin-bottom:20px;">
-                <div style="font-size:20px; font-weight:800; color:var(--coin);" id="profile-balance">0</div>
-                <div style="font-size:11px; color:var(--text-sub);">Jeton Bakiyesi</div>
+                <div style="font-size:24px; font-weight:800; color:var(--coin);" id="profile-balance">0</div>
+                <div style="font-size:12px; color:var(--text-sub);">Jeton Bakiyesi</div>
             </div>
-            <div class="side-item" onclick="openModal('m-req-user')" style="background:var(--white); border:1px solid var(--border); margin-bottom:10px;">
-                <i class="fa-solid fa-bullhorn" style="color:var(--primary);"></i> <div>PDF İste</div>
-            </div>
-            <div class="side-item" onclick="openModal('m-user-notifs')" style="background:var(--white); border:1px solid var(--border);">
-                <i class="fa-solid fa-bell" style="color:#F59E0B;"></i> <div>Duyurular</div>
+            
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <div class="side-item" onclick="openModal('m-req-user')" style="background:var(--white); border:1px solid var(--border);">
+                    <i class="fa-solid fa-bullhorn" style="color:var(--primary);"></i> <div>PDF İste</div>
+                </div>
+                <div class="side-item" onclick="openModal('m-user-notifs')" style="background:var(--white); border:1px solid var(--border);">
+                    <i class="fa-solid fa-bell" style="color:#F59E0B;"></i> <div>Duyurular</div>
+                </div>
             </div>
         </div>
 
@@ -491,35 +503,37 @@
 
         function go(viewId, el) {
             playClick(); 
+            // Loader göster
+            const loader = document.getElementById('page-loader');
+            loader.style.display = 'flex';
+
             document.querySelectorAll('.view').forEach(x => {
                 x.classList.remove('active');
-                // View değişirken scroll pozisyonunu sıfırlayabiliriz isterseniz, ama kullanıcı deneyimi için bırakıyorum.
             });
             
-            const activeView = document.getElementById('v-' + viewId);
-            activeView.classList.add('active'); 
-            
-            // Eğer PDF veya Chat sayfasıysa, scrollu en üste veya en alta atma mantığı:
-            if(viewId === 'chat') {
-                isChatActive = true;
-                scrollToBottom();
-            } else {
-                isChatActive = false;
-            }
+            // 0.4 saniye bekle (Loader efekti)
+            setTimeout(() => {
+                const activeView = document.getElementById('v-' + viewId);
+                activeView.classList.add('active'); 
+                
+                if(viewId === 'chat') {
+                    isChatActive = true;
+                    scrollToBottom();
+                } else {
+                    isChatActive = false;
+                }
 
-            const headerActions = document.getElementById('header-actions');
-            if(viewId === 'pdfs') headerActions.style.display = 'flex'; else headerActions.style.display = 'none';
-            
-            if(el) { document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active')); el.classList.add('active'); } 
-            
-            document.getElementById('chat-box-container').style.display = isChatActive ? 'flex' : 'none';
-            if(isChatActive) { document.getElementById('chat-badge').style.display = 'none'; }
-            
-            if(viewId === 'home') showToast("Ana Sayfa");
-            if(viewId === 'pdfs') showToast("Kütüphane");
-            if(viewId === 'earn') showToast("Jeton Kazan");
-            if(viewId === 'chat') showToast("Sohbet Odası");
-            if(viewId === 'profile') showToast("Profilim");
+                const headerActions = document.getElementById('header-actions');
+                if(viewId === 'pdfs') headerActions.style.display = 'flex'; else headerActions.style.display = 'none';
+                
+                if(el) { document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active')); el.classList.add('active'); } 
+                
+                document.getElementById('chat-box-container').style.display = isChatActive ? 'flex' : 'none';
+                if(isChatActive) { document.getElementById('chat-badge').style.display = 'none'; }
+                
+                // Loader gizle
+                loader.style.display = 'none';
+            }, 400);
         }
 
         // --- TASK SYSTEM ---
@@ -784,10 +798,8 @@
             if(found) catInput.value = found;
         }
         
-        // Modal Control Functions with Animation
         function openModal(id){ 
             playClick(); 
-            // Close all active modals immediately first
             document.querySelectorAll('.modal-overlay.active').forEach(overlay => {
                 overlay.classList.remove('active');
                 setTimeout(() => { overlay.style.display = 'none'; }, 200);
@@ -795,7 +807,6 @@
 
             const modal = document.getElementById(id);
             modal.style.display = 'flex';
-            // Slight delay to allow display:flex to apply before adding active class for transition
             setTimeout(() => {
                 modal.classList.add('active');
                 modal.classList.remove('closing');
@@ -813,14 +824,12 @@
             playClick(); 
             const activeOverlays = document.querySelectorAll('.modal-overlay.active');
             activeOverlays.forEach(overlay => {
-                overlay.classList.add('closing'); // Trigger close animation
+                overlay.classList.add('closing'); 
                 overlay.classList.remove('active');
-                
-                // Wait for animation to finish then hide
                 setTimeout(() => {
                     overlay.style.display = 'none';
                     overlay.classList.remove('closing');
-                }, 300); // 0.3s matches CSS transition
+                }, 300);
             });
         }
 
