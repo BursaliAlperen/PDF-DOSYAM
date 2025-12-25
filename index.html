@@ -8,15 +8,9 @@
     <!-- 1. Telegram SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js?56"></script>
 
-    <!-- 2. ÖDÜLLÜ REKLAM SDK (OnClick TMA - In-Stream) -->
-    <script src="https://js.onclckvd.com/in-stream-ad-admanager/tma.js"></script>
-
-    <!-- 3. DİĞER REKLAMLAR (Popunder KALDIRILDI - Sorun Çıkarıyordu) -->
-    <!-- Web Push -->
-    <script async src="https://js.onclckmn.com/static/onclicka.js" data-admpid="406223"></script>
-    <!-- In-Page Push -->
-    <script async src="https://js.onclckmn.com/static/onclicka.js" data-admpid="406221"></script>
-
+    <!-- 2. TADDY SDK -->
+    <script src="https://sdk.taddy.pro/web/taddy.min.js" data-pub-id="eb86a0cbc605b452a8b5601883cefc19"></script>
+    
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -34,21 +28,30 @@
             --text-main: #0F172A;
             --text-sub: #64748B;
             --border: #E2E8F0;
+            --coin: #F59E0B;
         }
 
-        /* Metin seçimini engelle ama inputları serbest bırak */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
         input, textarea { -webkit-user-select: text !important; user-select: text !important; }
-        
-        /* Tıklama sorunlarını önlemek için imleç ayarları */
-        button, .btn, .nav-item, .side-item, .list-item, .pdf-box, .cat-item { cursor: pointer; pointer-events: auto; }
+        button, .btn, .nav-item, .side-item, .list-item, .pdf-box, .task-box { cursor: pointer; pointer-events: auto; }
 
         ::-webkit-scrollbar { display: none; }
         body { background-color: var(--bg); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
-        .view { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 120px; display: none; }
-        .view.active { display: block; animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .view { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 20px; 
+            padding-bottom: 120px; 
+            display: none; 
+            opacity: 0; 
+            transition: opacity 0.2s ease; 
+            -webkit-overflow-scrolling: touch; /* Mobil kaydırma düzeltmesi */
+        }
+        .view.active { display: block; opacity: 1; }
+
+        /* SPECIAL CODE PAGE VIEW */
+        #v-code-page { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:9999; padding:20px; text-align:center; display:flex; flex-direction:column; justify-content:center; align-items:center; }
 
         /* TOAST */
         #toast-container { position: fixed; top: 60px; left: 0; width: 100%; z-index: 9999; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
@@ -59,15 +62,11 @@
         @keyframes slideUp { to { opacity: 0; transform: translateY(-20px); } }
 
         /* UI ELEMENTS */
-        .marquee-container { width: 100%; background: #FEF9C3; color: #854D0E; overflow: hidden; white-space: nowrap; position: relative; padding: 8px 0; margin-bottom: 15px; border-radius: 12px; border: 1px solid #FEF08A; display: flex; align-items: center; }
-        .marquee-content { display: inline-block; padding-left: 100%; animation: marquee 15s linear infinite; font-size: 13px; font-weight: 600; }
-        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
-
         .btn { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 16px; font-weight: 700; width: 100%; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.1s; }
         .btn:active { transform: scale(0.97); }
         .btn-sec { background: #EEF2FF; color: var(--primary); }
         .btn-dang { background: #FEF2F2; color: #EF4444; }
-        .btn-edit { background: #FFF7ED; color: #EA580C; }
+        .btn-coin { background: var(--coin); color: white; }
         .inp, .txtarea { width: 100%; padding: 14px; border-radius: 16px; border: 2px solid var(--border); background: #fff; margin-bottom: 10px; outline: none; font-size: 14px; }
         .inp:focus { border-color: var(--primary); }
         
@@ -75,9 +74,86 @@
         .header-actions { display: none; flex-direction: column; gap: 15px; align-items: center; }
         .header-icon-btn { width: 40px; height: 40px; background: var(--white); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); cursor: pointer; }
 
-        /* CHAT */
-        #v-chat { padding: 0; padding-bottom: 180px; background: #F1F5F9; position: relative; }
-        .chat-feed { padding: 15px; display: flex; flex-direction: column; gap: 15px; padding-top: 60px; }
+        /* TASK BOX */
+        .task-box { background: white; padding: 15px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 10px; }
+        .task-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .task-reward { background: #FFFBEB; color: var(--coin); padding: 5px 10px; border-radius: 20px; font-weight: 800; font-size: 12px; display: flex; align-items: center; gap: 5px; }
+        .code-input-area { display: flex; gap: 5px; margin-top: 10px; }
+
+        /* NAV */
+        .nav-container { position: fixed; bottom: 35px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; z-index: 1000; }
+        .nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-radius: 24px; display: flex; justify-content: space-around; padding: 14px; box-shadow: 0 20px 50px -10px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.6); }
+        .nav-item { font-size: 24px; color: #CBD5E1; transition: 0.3s; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 14px; position: relative; }
+        .nav-item.active { color: var(--primary); background: #EEF2FF; }
+        .nav-badge { position: absolute; top: 5px; right: 5px; background: #EF4444; color: white; font-size: 10px; font-weight: 800; min-width: 18px; height: 18px; border-radius: 9px; display: flex; align-items: center; justify-content: center; padding: 0 4px; box-shadow: 0 2px 5px rgba(239, 68, 68, 0.4); border: 2px solid #fff; }
+
+        /* PDF GRID */
+        .pdf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .pdf-box { background: var(--white); padding: 15px; border-radius: 20px; text-align: center; border: 1px solid var(--border); height: 195px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; transition: 0.2s; }
+        .pdf-thumb { width: 45px; height: 45px; background: #EEF2FF; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 20px; margin-bottom: 8px; }
+        .pdf-title { font-weight: 700; font-size: 13px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.3; margin-bottom: 5px; }
+        .pdf-price { color: var(--coin); font-weight: 800; font-size: 12px; margin-top: 5px; display: flex; align-items: center; gap: 4px; justify-content: center; }
+        .pdf-badge { font-size: 10px; background: #F1F5F9; padding: 3px 8px; border-radius: 12px; margin-bottom: 8px; color: var(--text-sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90%; }
+        .pdf-info { width: 100%; display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: #94A3B8; border-top: 1px solid #F1F5F9; padding-top: 8px; margin-top: auto; }
+        .list-item { background: var(--white); padding: 15px; border-radius: 16px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .notif-item { background: #FEF9C3; color:#854D0E; padding:15px; border-radius:12px; margin-bottom:10px; text-align:left; font-size:14px; border:1px solid #FEF08A; }
+
+        .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1500; display: none; }
+        .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: var(--white); z-index: 1600; transition: 0.3s; padding: 20px; padding-top: 60px; display: flex; flex-direction: column; }
+        .sidebar.open { left: 0; }
+        .side-item { padding: 12px; border-radius: 12px; display: flex; align-items: center; gap: 12px; font-weight: 600; color: var(--text-sub); margin-bottom: 5px; cursor: pointer; }
+        
+        /* --- GÜNCELLENMİŞ MODAL ANİMASYONLARI --- */
+        .modal-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.6); z-index: 3000; 
+            display: none; align-items: center; justify-content: center; backdrop-filter: blur(3px); 
+            opacity: 0; transition: opacity 0.3s ease; /* Fade transition */
+        }
+        .modal-overlay.active { 
+            display: flex; 
+            opacity: 1; 
+        }
+        .modal-overlay.closing {
+            opacity: 0; /* Kapanırken opacity 0'a iner */
+        }
+
+        .modal-box { 
+            background: var(--white); width: 85%; max-width: 350px; 
+            border-radius: 24px; padding: 24px; text-align: center; 
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2); margin-bottom: 50px; 
+            transform: scale(0.8); 
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* Pop efektli geçiş */
+        }
+        .modal-overlay.active .modal-box { 
+            transform: scale(1); /* Açılınca tam boyut */
+        }
+        .modal-overlay.closing .modal-box {
+            transform: scale(0.8); /* Kapanırken küçülür */
+        }
+
+        /* --- CHAT SCROLL FIX --- */
+        #v-chat { 
+            padding: 0; 
+            padding-bottom: 120px; 
+            background: #F1F5F9; 
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow-y: hidden; /* Scroll'u container'dan alıp feed'e veriyoruz */
+        }
+        .chat-feed { 
+            flex: 1;
+            padding: 15px; 
+            padding-top: 60px; 
+            padding-bottom: 20px; /* Input'un arkasında kalmaması için */
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px; 
+            overflow-y: auto; /* Kaydırma burada aktif */
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch; /* Mobil için smooth scroll */
+        }
         .chat-input-box { position: fixed; bottom: 110px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid var(--border); padding: 10px; border-radius: 20px; display: none; align-items: center; gap: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); z-index: 2000; }
         .chat-inp { flex: 1; border: none; background: transparent; padding: 8px; font-size: 14px; outline: none; }
         .chat-send-btn { width: 36px; height: 36px; background: var(--primary); color: white; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
@@ -97,192 +173,211 @@
 
         .pinned-container { position: absolute; top: 0; left: 0; width: 100%; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); padding: 10px 15px; z-index: 500; display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .pinned-line { width: 3px; height: 30px; background: var(--primary); border-radius: 2px; }
-
-        /* NAV */
-        .nav-container { position: fixed; bottom: 35px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; z-index: 1000; }
-        .nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-radius: 24px; display: flex; justify-content: space-around; padding: 14px; box-shadow: 0 20px 50px -10px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.6); }
-        .nav-item { font-size: 24px; color: #CBD5E1; transition: 0.3s; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 14px; position: relative; }
-        .nav-item.active { color: var(--primary); background: #EEF2FF; }
-        .nav-badge { position: absolute; top: 5px; right: 5px; background: #EF4444; color: white; font-size: 10px; font-weight: 800; min-width: 18px; height: 18px; border-radius: 9px; display: flex; align-items: center; justify-content: center; padding: 0 4px; box-shadow: 0 2px 5px rgba(239, 68, 68, 0.4); border: 2px solid #fff; }
-
-        .pdf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .pdf-box { background: var(--white); padding: 15px; border-radius: 20px; text-align: center; border: 1px solid var(--border); height: 185px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; transition: 0.2s; }
-        .pdf-thumb { width: 45px; height: 45px; background: #EEF2FF; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 20px; margin-bottom: 8px; }
-        .pdf-title { font-weight: 700; font-size: 13px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.3; margin-bottom: 5px; }
-        .pdf-badge { font-size: 10px; background: #F1F5F9; padding: 3px 8px; border-radius: 12px; margin-bottom: 8px; color: var(--text-sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90%; }
-        .pdf-info { width: 100%; display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: #94A3B8; border-top: 1px solid #F1F5F9; padding-top: 8px; margin-top: auto; }
-        .list-item { background: var(--white); padding: 15px; border-radius: 16px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .notif-item { background: #FEF9C3; color:#854D0E; padding:15px; border-radius:12px; margin-bottom:10px; text-align:left; font-size:14px; border:1px solid #FEF08A; }
-
-        .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1500; display: none; }
-        .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: var(--white); z-index: 1600; transition: 0.3s; padding: 20px; padding-top: 60px; display: flex; flex-direction: column; }
-        .sidebar.open { left: 0; }
-        .side-item { padding: 12px; border-radius: 12px; display: flex; align-items: center; gap: 12px; font-weight: 600; color: var(--text-sub); margin-bottom: 5px; cursor: pointer; }
-        
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
-        .modal-box { background: var(--white); width: 85%; max-width: 350px; border-radius: 24px; padding: 24px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.2); margin-bottom: 50px; }
     </style>
 </head>
 <body>
 
     <div id="toast-container"></div>
 
-    <!-- SIDEBAR -->
-    <div class="sidebar-overlay" id="sb-overlay" onclick="toggleSidebar(false)"></div>
-    <div class="sidebar" id="sidebar">
-        <h3 style="margin-bottom:20px; color:var(--primary);">Kategoriler</h3>
-        <div style="flex:1; overflow-y:auto;" id="sb-list"></div>
-        <div style="margin-top:20px; text-align:center; font-size:12px; color:var(--text-sub);">v14.0 Stable</div>
+    <!-- CODE GENERATION PAGE -->
+    <div id="v-code-page" style="display:none;">
+        <h2 style="color:var(--primary); margin-bottom:20px;">Görev Tamamlandı!</h2>
+        <p style="margin-bottom:20px; color:var(--text-sub);">Aşağıdaki kodu kopyalayıp uygulamaya geri dönün.</p>
+        <div style="background:#F1F5F9; padding:20px; border-radius:12px; font-size:24px; font-weight:800; letter-spacing:2px; margin-bottom:20px; border:2px dashed var(--primary);" id="generated-code">YÜKLENİYOR...</div>
+        <button class="btn" onclick="copyGeneratedCode()">Kodu Kopyala</button>
+        <div style="margin-top:20px; font-size:12px; color:#aaa;">Bu pencereyi kapatabilirsiniz.</div>
     </div>
 
-    <!-- HEADER -->
-    <div class="header">
-        <div>
-            <div style="font-size:12px; color:var(--text-sub);">Hoş Geldin,</div>
-            <div style="font-weight:700; font-size:18px;" id="u-name">Kullanıcı</div>
+    <!-- MAIN APP CONTENT -->
+    <div id="app-container">
+        <!-- SIDEBAR -->
+        <div class="sidebar-overlay" id="sb-overlay" onclick="toggleSidebar(false)"></div>
+        <div class="sidebar" id="sidebar">
+            <h3 style="margin-bottom:20px; color:var(--primary);">Kategoriler</h3>
+            <div style="flex:1; overflow-y:auto;" id="sb-list"></div>
+            <div style="margin-top:20px; text-align:center; font-size:12px; color:var(--text-sub);">v15.0 Coin System</div>
         </div>
-        <div class="header-actions" id="header-actions">
-            <div class="header-icon-btn" onclick="toggleSidebar(true)"><i class="fa-solid fa-bars-staggered"></i></div>
-            <div class="header-icon-btn" onclick="openModal('m-history'); renderHistory();"><i class="fa-solid fa-clock-rotate-left"></i></div>
-        </div>
-    </div>
 
-    <!-- 1. HOME VIEW -->
-    <div id="v-home" class="view active">
-        <div class="marquee-container"><div class="marquee-content" id="home-marquee-text">Duyurular yükleniyor...</div></div>
-        <div style="background: linear-gradient(135deg, #6366F1, #A855F7); color: white; border-radius: 24px; padding: 24px; margin-bottom: 24px; box-shadow: 0 15px 30px -10px rgba(99, 102, 241, 0.4);">
-            <h3 style="font-size:22px;">Sınavlara Hazır Mısın?</h3>
-            <div style="display:flex; gap:10px; margin-top:15px;">
-                <button class="btn" style="background:var(--white); color:var(--primary); width:auto; padding:10px 20px; font-size:13px; flex:1;" onclick="go('pdfs', document.querySelectorAll('.nav-item')[1])">Kütüphaneye Git</button>
-                <button class="btn" style="background:rgba(255,255,255,0.2); color:white; width:auto; padding:10px 20px; font-size:13px; flex:1;" onclick="openModal('m-req-user')">PDF İste</button>
+        <!-- HEADER -->
+        <div class="header">
+            <div>
+                <div style="font-size:12px; color:var(--text-sub);">Hoş Geldin,</div>
+                <div style="font-weight:700; font-size:18px;" id="u-name">Kullanıcı</div>
+            </div>
+            <div class="header-actions" id="header-actions">
+                <div class="header-icon-btn" onclick="toggleSidebar(true)"><i class="fa-solid fa-bars-staggered"></i></div>
+                <div class="header-icon-btn" onclick="openModal('m-history'); renderHistory();"><i class="fa-solid fa-clock-rotate-left"></i></div>
             </div>
         </div>
-        <h4 style="margin-bottom:15px;">Hızlı Erişim</h4>
-        <div class="cat-grid" id="home-cat-grid" style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px;"></div>
-    </div>
 
-    <!-- 2. PDFS VIEW -->
-    <div id="v-pdfs" class="view">
-        <h2 style="margin-bottom:15px;" id="lib-title">Tüm Kitaplar</h2>
-        <input class="inp" placeholder="🔍 Kitap veya yazar ara..." id="search" oninput="render()">
-        <div id="pdf-list" class="pdf-grid"><div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-sub);">Yükleniyor...</div></div>
-    </div>
-
-    <!-- 3. CHAT VIEW -->
-    <div id="v-chat" class="view">
-        <div id="pinned-bar" class="pinned-container" style="display:none;" onclick="jumpToPin()">
-            <div class="pinned-line"></div>
-            <div style="flex:1; overflow:hidden;">
-                <div style="font-size:11px; font-weight:700; color:var(--primary);">📌 Sabitlenen Mesaj</div>
-                <div style="font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="pinned-text-content">...</div>
+        <!-- 1. HOME VIEW -->
+        <div id="v-home" class="view active">
+            <div style="background: linear-gradient(135deg, #6366F1, #A855F7); color: white; border-radius: 24px; padding: 24px; margin-bottom: 24px; box-shadow: 0 15px 30px -10px rgba(99, 102, 241, 0.4);">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3 style="font-size:22px;">Sınavlara Hazır Mısın?</h3>
+                    <div style="text-align:right;">
+                        <div style="font-size:10px; opacity:0.8;">BAKİYEN</div>
+                        <div style="font-size:20px; font-weight:800;"><i class="fa-solid fa-coins" style="color:#FCD34D;"></i> <span id="home-balance">0</span></div>
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px; margin-top:15px;">
+                    <button class="btn" style="background:var(--white); color:var(--primary); width:auto; padding:10px 20px; font-size:13px; flex:1;" onclick="go('pdfs', document.querySelectorAll('.nav-item')[1])">Kütüphaneye Git</button>
+                    <button class="btn" style="background:rgba(255,255,255,0.2); color:white; width:auto; padding:10px 20px; font-size:13px; flex:1;" onclick="openModal('m-req-user')">PDF İste</button>
+                </div>
             </div>
-            <i class="fa-solid fa-times" id="btn-unpin" onclick="unpinMsg(event)" style="color:#aaa; display:none; padding:5px;"></i>
+            <h4 style="margin-bottom:15px;">Hızlı Erişim</h4>
+            <div class="cat-grid" id="home-cat-grid" style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px;"></div>
         </div>
-        <div id="chat-feed" class="chat-feed"><div style="text-align:center; color:#94A3B8;">Sohbet yükleniyor...</div></div>
-    </div>
 
-    <!-- CHAT INPUT BOX -->
-    <div id="chat-box-container" class="chat-input-box">
-        <input type="text" id="chat-msg-in" class="chat-inp" placeholder="Mesaj yaz..." onkeypress="if(event.key==='Enter') sendChat()">
-        <button class="chat-send-btn" onclick="sendChat()"><i class="fa-solid fa-paper-plane"></i></button>
-    </div>
-
-    <!-- 4. PROFILE VIEW -->
-    <div id="v-profile" class="view">
-        <div style="text-align:center; margin:30px 0;">
-            <div id="u-avatar-box" style="width:100px; height:100px; border-radius:50%; background:var(--white); margin:0 auto 15px; display:flex; align-items:center; justify-content:center; font-size:40px; color:var(--primary); overflow:hidden;">
-                <i class="fa-solid fa-user-astronaut"></i>
+        <!-- 2. PDFS VIEW -->
+        <div id="v-pdfs" class="view">
+            <h2 style="margin-bottom:15px;" id="lib-title">Tüm Kitaplar</h2>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <input class="inp" style="margin-bottom:0; flex:1; margin-right:10px;" placeholder="🔍 Ara..." id="search" oninput="render()">
+                <div style="font-weight:800; color:var(--coin); white-space:nowrap;"><i class="fa-solid fa-coins"></i> <span id="lib-balance">0</span></div>
             </div>
-            <h3>Profil</h3>
+            <div id="pdf-list" class="pdf-grid"><div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-sub);">Yükleniyor...</div></div>
         </div>
-        <div style="background:var(--white); padding:15px; border-radius:12px; text-align:center; border:1px solid var(--border); margin-bottom:20px;">
-            <div style="font-size:20px; font-weight:800; color:var(--primary);" id="my-ad-stat">0</div>
-            <div style="font-size:11px; color:var(--text-sub);">İzlenen Reklam</div>
-        </div>
-        <div class="side-item" onclick="openModal('m-req-user')" style="background:var(--white); border:1px solid var(--border); margin-bottom:10px;">
-            <i class="fa-solid fa-bullhorn" style="color:var(--primary);"></i> <div>PDF İste</div>
-        </div>
-        <div class="side-item" onclick="openModal('m-user-notifs')" style="background:var(--white); border:1px solid var(--border);">
-            <i class="fa-solid fa-bell" style="color:#F59E0B;"></i> <div>Duyurular</div>
-        </div>
-    </div>
 
-    <!-- 5. ADMIN VIEW -->
-    <div id="v-admin" class="view">
-        <h2 style="margin-bottom:20px; color:var(--primary);">Yönetici Paneli</h2>
-        <div style="background:#1E293B; color:white; padding:20px; border-radius:16px; margin-bottom:15px; text-align:center;">
-            <div style="font-size:12px; opacity:0.7;">TOPLAM REKLAM</div>
-            <div style="font-size:28px; font-weight:800; color:#FACC15;" id="st-ads-total">0</div>
-        </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:15px;">
-             <div class="pdf-box" style="height:auto; padding:10px;"><span style="font-size:16px; font-weight:800; color:var(--primary);" id="st-users">0</span><span style="font-size:10px; color:var(--text-sub);">Toplam</span></div>
-             <div class="pdf-box" style="height:auto; padding:10px;"><span style="font-size:16px; font-weight:800; color:#10B981;" id="st-active">0</span><span style="font-size:10px; color:var(--text-sub);">Aktif</span></div>
-             <div class="pdf-box" style="height:auto; padding:10px;"><span style="font-size:16px; font-weight:800; color:var(--primary);" id="st-pdfs">0</span><span style="font-size:10px; color:var(--text-sub);">PDF</span></div>
-        </div>
-        <div style="display:grid; gap:10px;">
-            <button class="btn btn-sec" onclick="openModal('m-pdf')">PDF Yönet</button>
-            <button class="btn btn-sec" onclick="openModal('m-users')">Kullanıcılar</button>
-            <button class="btn btn-sec" onclick="openModal('m-reqs')">İstekler</button>
-            <button class="btn btn-sec" onclick="openModal('m-add-notif')">Duyurular</button>
-        </div>
-    </div>
-
-    <!-- MODALS -->
-    <div id="m-unlock" class="modal-overlay">
-        <div class="modal-box">
-            <h3>İndirme Kilidi</h3>
-            <div style="width:100px; height:100px; border-radius:50%; background:conic-gradient(var(--primary) 0deg, #E2E8F0 0deg); display:flex; align-items:center; justify-content:center; margin:20px auto;" id="prog-circle">
-                <div style="font-weight:800; font-size:24px;" id="prog-txt">0/3</div>
-            </div>
-            <button class="btn" id="btn-ad" onclick="playClick(); watchAdSequence()">Reklamı Başlat</button>
-            <button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">Vazgeç</button>
-        </div>
-    </div>
-
-    <div id="m-history" class="modal-overlay"><div class="modal-box"><h3>Geçmiş</h3><div id="history-list" style="max-height:300px; overflow-y:auto; text-align:left; margin:15px 0;"></div><button class="btn btn-dang" style="font-size:12px; padding:10px;" onclick="clearHistory()">Temizle</button><button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">Kapat</button></div></div>
-    <div id="m-user-notifs" class="modal-overlay"><div class="modal-box" style="max-height:80vh;"><h3 style="margin-bottom:15px;">Duyurular</h3><div id="user-notif-list" style="overflow-y:auto; flex:1; text-align:left;"></div><button class="btn btn-sec" style="margin-top:15px;" onclick="closeM()">Kapat</button></div></div>
-    
-    <!-- PDF MODAL (EKLEME ve DÜZENLEME) -->
-    <div id="m-pdf" class="modal-overlay">
-        <div class="modal-box">
-            <h3 id="pdf-modal-title">PDF Ekle</h3>
-            <input id="ap-l" class="inp" placeholder="Link (URL)" oninput="autoDetect(this.value, 'link')">
-            <input id="ap-n" class="inp" placeholder="Ad" oninput="autoDetect(this.value, 'name')">
-            <input id="ap-c" class="inp" placeholder="Kategori (Oto Algılanır)">
-            <input id="ap-ads" class="inp" type="number" placeholder="Reklam Sayısı">
-            <button class="btn" id="btn-save-pdf" onclick="savePdf()">Ekle</button>
-            <div id="edit-cancel-box" style="display:none; margin-top:5px;">
-                <button class="btn btn-sec" onclick="resetPdfForm()">Yeni Ekleme Moduna Geç</button>
+        <!-- 3. EARN (JETON AL) VIEW -->
+        <div id="v-earn" class="view">
+            <h2 style="margin-bottom:15px; color:var(--coin);"><i class="fa-solid fa-coins"></i> Jeton Kazan</h2>
+            <div style="background:white; padding:15px; border-radius:16px; text-align:center; margin-bottom:20px; border:1px solid var(--border);">
+                <div style="font-size:12px; color:var(--text-sub);">Mevcut Bakiyen</div>
+                <div style="font-size:32px; font-weight:800; color:var(--coin);" id="earn-balance">0</div>
             </div>
             
-            <div onclick="toggleAdmList()" id="btn-toggle-list" style="margin-top:15px; cursor:pointer; font-size:13px; color:var(--primary); font-weight:600; background:#EEF2FF; padding:8px; border-radius:8px;">
-                <i class="fa-solid fa-list"></i> Listeyi Göster
-            </div>
-            <div id="adm-pdf-c" style="display:none; margin-top:10px;">
-                <input class="inp" placeholder="Ara..." oninput="renderAdmPdfs(this.value)">
-                <div id="adm-pdf-list" style="max-height:150px; overflow-y:auto; text-align:left;"></div>
+            <h4 style="margin-bottom:10px;">Görevler</h4>
+            <div id="task-list">
+                <div style="text-align:center; color:#999; padding:20px;">Görevler yükleniyor...</div>
             </div>
             
-            <button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">Kapat</button>
-        </div>
-    </div>
-
-    <div id="m-users" class="modal-overlay"><div class="modal-box"><h3>Kullanıcılar</h3><input class="inp" placeholder="Ara..." oninput="renderUsers(this.value)"><div id="adm-user-list" style="max-height:300px; overflow-y:auto; text-align:left; margin-top:10px;"></div><button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">Kapat</button></div></div>
-    <div id="m-reqs" class="modal-overlay"><div class="modal-box"><h3>İstekler</h3><div id="adm-req-list" style="max-height:300px; overflow-y:auto; text-align:left; margin-top:10px;"></div><button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">Kapat</button></div></div>
-    <div id="m-add-notif" class="modal-overlay"><div class="modal-box"><h3>Duyuru Yönet</h3><textarea id="notif-txt" class="txtarea" placeholder="Duyuru..."></textarea><button class="btn" onclick="sendNotification()">Yayınla</button><div id="adm-notif-list" style="max-height:150px; overflow-y:auto; margin-top:10px;"></div><button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">Kapat</button></div></div>
-    <div id="m-req-user" class="modal-overlay"><div class="modal-box"><h3>PDF İste</h3><input id="req-txt" class="inp" placeholder="PDF Adı"><button class="btn" onclick="sendReq()">Gönder</button><button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">İptal</button></div></div>
-
-    <!-- BOTTOM NAV -->
-    <div class="nav-container">
-        <div class="nav">
-            <div class="nav-item active" onclick="go('home',this)"><i class="fa-solid fa-house"></i></div>
-            <div class="nav-item" onclick="go('pdfs',this)"><i class="fa-solid fa-book-open"></i></div>
-            <div class="nav-item" onclick="go('chat',this)">
-                <i class="fa-solid fa-comments"></i>
-                <div class="nav-badge" id="chat-badge" style="display:none">0</div>
+            <h4 style="margin:20px 0 10px 0;">Ekstra</h4>
+            <div class="task-box">
+                <div class="task-header">
+                    <div style="font-weight:700;">Reklam İzle</div>
+                    <div class="task-reward">+1 <i class="fa-solid fa-coins"></i></div>
+                </div>
+                <button class="btn btn-sec" onclick="watchTaddyAd()">Reklamı Başlat</button>
             </div>
-            <div class="nav-item" onclick="go('profile',this)"><i class="fa-solid fa-user"></i></div>
-            <div class="nav-item" id="nav-admin" style="display:none;" onclick="go('admin',this); loadStats();"><i class="fa-solid fa-shield-halved"></i></div>
+        </div>
+
+        <!-- 4. CHAT VIEW -->
+        <div id="v-chat" class="view">
+            <div id="pinned-bar" class="pinned-container" style="display:none;" onclick="jumpToPin()">
+                <div class="pinned-line"></div>
+                <div style="flex:1; overflow:hidden;">
+                    <div style="font-size:11px; font-weight:700; color:var(--primary);">📌 Sabitlenen Mesaj</div>
+                    <div style="font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="pinned-text-content">...</div>
+                </div>
+                <i class="fa-solid fa-times" id="btn-unpin" onclick="unpinMsg(event)" style="color:#aaa; display:none; padding:5px;"></i>
+            </div>
+            <div id="chat-feed" class="chat-feed"><div style="text-align:center; color:#94A3B8;">Sohbet yükleniyor...</div></div>
+        </div>
+        <div id="chat-box-container" class="chat-input-box">
+            <input type="text" id="chat-msg-in" class="chat-inp" placeholder="Mesaj yaz..." onkeypress="if(event.key==='Enter') sendChat()">
+            <button class="chat-send-btn" onclick="sendChat()"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+
+        <!-- 5. PROFILE VIEW -->
+        <div id="v-profile" class="view">
+            <div style="text-align:center; margin:30px 0;">
+                <div id="u-avatar-box" style="width:100px; height:100px; border-radius:50%; background:var(--white); margin:0 auto 15px; display:flex; align-items:center; justify-content:center; font-size:40px; color:var(--primary); overflow:hidden;">
+                    <i class="fa-solid fa-user-astronaut"></i>
+                </div>
+                <h3>Profil</h3>
+            </div>
+            <div style="background:var(--white); padding:15px; border-radius:12px; text-align:center; border:1px solid var(--border); margin-bottom:20px;">
+                <div style="font-size:20px; font-weight:800; color:var(--coin);" id="profile-balance">0</div>
+                <div style="font-size:11px; color:var(--text-sub);">Jeton Bakiyesi</div>
+            </div>
+            <div class="side-item" onclick="openModal('m-req-user')" style="background:var(--white); border:1px solid var(--border); margin-bottom:10px;">
+                <i class="fa-solid fa-bullhorn" style="color:var(--primary);"></i> <div>PDF İste</div>
+            </div>
+            <div class="side-item" onclick="openModal('m-user-notifs')" style="background:var(--white); border:1px solid var(--border);">
+                <i class="fa-solid fa-bell" style="color:#F59E0B;"></i> <div>Duyurular</div>
+            </div>
+        </div>
+
+        <!-- 6. ADMIN VIEW -->
+        <div id="v-admin" class="view">
+            <h2 style="margin-bottom:20px; color:var(--primary);">Yönetici Paneli</h2>
+            <div class="pdf-box" style="height:auto; padding:10px; margin-bottom:15px;"><span style="font-size:16px; font-weight:800; color:var(--primary);" id="st-users">0</span><span style="font-size:10px; color:var(--text-sub);">Toplam Kullanıcı</span></div>
+            <div style="display:grid; gap:10px;">
+                <button class="btn btn-sec" onclick="openModal('m-pdf')">PDF Yönet</button>
+                <button class="btn btn-sec" onclick="openModal('m-tasks')">Görev Yönet</button>
+                <button class="btn btn-sec" onclick="openModal('m-users')">Kullanıcılar</button>
+                <button class="btn btn-sec" onclick="openModal('m-reqs')">İstekler</button>
+                <button class="btn btn-sec" onclick="openModal('m-add-notif')">Duyurular</button>
+            </div>
+        </div>
+
+        <!-- MODALS -->
+        <div id="m-unlock" class="modal-overlay">
+            <div class="modal-box">
+                <h3>PDF Kilidi</h3>
+                <div style="font-size:40px; color:var(--coin); margin:15px 0;"><i class="fa-solid fa-lock"></i></div>
+                <p id="unlock-msg">Bu kitabı açmak için X jeton gerekiyor.</p>
+                <button class="btn btn-coin" id="btn-unlock-pdf" style="margin-top:15px;">Kilidi Aç</button>
+                <button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">Vazgeç</button>
+            </div>
+        </div>
+
+        <div id="m-history" class="modal-overlay"><div class="modal-box"><h3>Geçmiş</h3><div id="history-list" style="max-height:300px; overflow-y:auto; text-align:left; margin:15px 0;"></div><button class="btn btn-dang" style="font-size:12px; padding:10px;" onclick="clearHistory()">Temizle</button><button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">Kapat</button></div></div>
+        <div id="m-user-notifs" class="modal-overlay"><div class="modal-box" style="max-height:80vh;"><h3 style="margin-bottom:15px;">Duyurular</h3><div id="user-notif-list" style="overflow-y:auto; flex:1; text-align:left;"></div><button class="btn btn-sec" style="margin-top:15px;" onclick="closeM()">Kapat</button></div></div>
+        
+        <!-- ADMIN PDF MODAL -->
+        <div id="m-pdf" class="modal-overlay">
+            <div class="modal-box">
+                <h3 id="pdf-modal-title">PDF Ekle</h3>
+                <input id="ap-l" class="inp" placeholder="Link (URL)" oninput="autoDetect(this.value, 'link')">
+                <input id="ap-n" class="inp" placeholder="Ad" oninput="autoDetect(this.value, 'name')">
+                <input id="ap-c" class="inp" placeholder="Kategori (Oto Algılanır)">
+                <input id="ap-cost" class="inp" type="number" placeholder="Jeton Fiyatı (Örn: 5)">
+                <button class="btn" id="btn-save-pdf" onclick="savePdf()">Ekle</button>
+                <div id="edit-cancel-box" style="display:none; margin-top:5px;"><button class="btn btn-sec" onclick="resetPdfForm()">Vazgeç</button></div>
+                <div onclick="toggleAdmList()" id="btn-toggle-list" style="margin-top:15px; cursor:pointer; font-size:13px; color:var(--primary); font-weight:600; background:#EEF2FF; padding:8px; border-radius:8px;"><i class="fa-solid fa-list"></i> Listeyi Göster</div>
+                <div id="adm-pdf-c" style="display:none; margin-top:10px;"><input class="inp" placeholder="Ara..." oninput="renderAdmPdfs(this.value)"><div id="adm-pdf-list" style="max-height:150px; overflow-y:auto; text-align:left;"></div></div>
+                <button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">Kapat</button>
+            </div>
+        </div>
+
+        <!-- ADMIN TASKS MODAL -->
+        <div id="m-tasks" class="modal-overlay">
+            <div class="modal-box">
+                <h3>Görev Oluştur</h3>
+                <input id="t-name" class="inp" placeholder="Görev Adı (Örn: Shortlink 1)">
+                <input id="t-reward" class="inp" type="number" placeholder="Ödül Miktarı (Örn: 10)">
+                <div style="background:#F1F5F9; padding:10px; border-radius:8px; margin-bottom:10px; text-align:left; font-size:12px;">
+                    <b>Adım 1:</b> Bu linki oluştur:<br>
+                    <button class="btn btn-sec" style="padding:5px; font-size:11px; margin-top:5px;" onclick="generateTaskLink()">Link Üret</button>
+                    <div id="t-generated-link" style="margin-top:5px; word-break:break-all; font-family:monospace; color:blue;"></div>
+                </div>
+                <input id="t-short-url" class="inp" placeholder="Kısaltılmış Linki Yapıştır">
+                <button class="btn" onclick="saveTask()">Görevi Kaydet</button>
+                <div id="adm-task-list" style="max-height:150px; overflow-y:auto; text-align:left; margin-top:10px;"></div>
+                <button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">Kapat</button>
+            </div>
+        </div>
+
+        <div id="m-users" class="modal-overlay"><div class="modal-box"><h3>Kullanıcılar</h3><input class="inp" placeholder="Ara..." oninput="renderUsers(this.value)"><div id="adm-user-list" style="max-height:300px; overflow-y:auto; text-align:left; margin-top:10px;"></div><button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">Kapat</button></div></div>
+        <div id="m-reqs" class="modal-overlay"><div class="modal-box"><h3>İstekler</h3><div id="adm-req-list" style="max-height:300px; overflow-y:auto; text-align:left; margin-top:10px;"></div><button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">Kapat</button></div></div>
+        <div id="m-add-notif" class="modal-overlay"><div class="modal-box"><h3>Duyuru Yönet</h3><textarea id="notif-txt" class="txtarea" placeholder="Duyuru..."></textarea><button class="btn" onclick="sendNotification()">Yayınla</button><div id="adm-notif-list" style="max-height:150px; overflow-y:auto; margin-top:10px;"></div><button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">Kapat</button></div></div>
+        <div id="m-req-user" class="modal-overlay"><div class="modal-box"><h3>PDF İste</h3><input id="req-txt" class="inp" placeholder="PDF Adı"><button class="btn" onclick="sendReq()">Gönder</button><button class="btn btn-sec" style="margin-top:10px;" onclick="closeM()">İptal</button></div></div>
+
+        <!-- BOTTOM NAV -->
+        <div class="nav-container">
+            <div class="nav">
+                <div class="nav-item active" onclick="go('home',this)"><i class="fa-solid fa-house"></i></div>
+                <div class="nav-item" onclick="go('pdfs',this)"><i class="fa-solid fa-book-open"></i></div>
+                <div class="nav-item" onclick="go('earn',this)"><i class="fa-solid fa-gift"></i></div>
+                <div class="nav-item" onclick="go('chat',this)">
+                    <i class="fa-solid fa-comments"></i>
+                    <div class="nav-badge" id="chat-badge" style="display:none">0</div>
+                </div>
+                <div class="nav-item" onclick="go('profile',this)"><i class="fa-solid fa-user"></i></div>
+                <div class="nav-item" id="nav-admin" style="display:none;" onclick="go('admin',this); loadStats();"><i class="fa-solid fa-shield-halved"></i></div>
+            </div>
         </div>
     </div>
 
@@ -308,6 +403,7 @@
             measurementId: "G-ZHW0QCG469"
         };
         const ADMIN_IDS = [7904032877, 8392479231];
+        const BASE_URL = "https://pdf-dosyam.onrender.com";
         const CATS = [
             {n:"Matematik", i:"fa-calculator"}, {n:"Geometri", i:"fa-shapes"}, {n:"Fizik", i:"fa-atom"}, 
             {n:"Kimya", i:"fa-flask"}, {n:"Biyoloji", i:"fa-dna"}, {n:"Türkçe", i:"fa-book"}, 
@@ -322,24 +418,6 @@
         function playClick() { realClick.currentTime = 0; realClick.volume = 0.4; realClick.play().catch(()=>{}); }
         function playMsgSound() { msgSound.currentTime = 0; msgSound.volume = 0.5; msgSound.play().catch(()=>{}); }
 
-        // --- REKLAM (ONCLICKA) INIT ---
-        let showAdFn = null;
-
-        document.addEventListener('DOMContentLoaded', () => {
-            // Ödüllü Video Başlatma (ID: 405739)
-            if (window.initCdTma) {
-                window.initCdTma({ id: '405739' })
-                .then(show => {
-                    showAdFn = show;
-                    console.log('Ödüllü reklam hazır.');
-                })
-                .catch(e => console.error('Reklam hatası:', e));
-            }
-
-            document.querySelectorAll('button, .btn, .nav-item, .side-item, .cat-item, .header-icon-btn').forEach(el => el.addEventListener('click', playClick));
-            initChat();
-        });
-
         firebase.initializeApp(CFG);
         const db = firebase.firestore();
         db.enablePersistence().catch(()=>{});
@@ -348,19 +426,49 @@
         tg.expand();
 
         let user = tg.initDataUnsafe.user || { id: 0, first_name: "Misafir", last_name: "" };
-        let pdfs=[], selPdf=null, globalReqAds=3, currentAdStep=0, isChatActive=false, pinnedMsgId=null;
+        let pdfs=[], tasks=[], selPdf=null, balance=0, isChatActive=false, pinnedMsgId=null;
         let editingPdfId = null;
 
+        // --- PAGE LOGIC (TASK VERIFICATION) ---
         window.onload = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const taskId = urlParams.get('task');
+
+            if (taskId) {
+                document.getElementById('app-container').style.display = 'none';
+                document.getElementById('v-code-page').style.display = 'flex';
+                const secret = "PDFKEY";
+                const raw = `${taskId}_${user.id}_${secret}`;
+                const code = btoa(raw).replace(/=/g,''); 
+                document.getElementById('generated-code').innerText = code;
+            } else {
+                initializeApp();
+            }
+        };
+
+        function copyGeneratedCode() {
+            const code = document.getElementById('generated-code').innerText;
+            const el = document.createElement('textarea'); el.value = code; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
+            alert("Kod kopyalandı! Uygulamaya dönüp yapıştırın.");
+        }
+
+        function initializeApp() {
             document.getElementById('u-name').innerText = user.first_name;
             if(ADMIN_IDS.includes(user.id)) document.getElementById('nav-admin').style.display = 'flex';
             if(user.photo_url) document.getElementById('u-avatar-box').innerHTML = `<img src="${user.photo_url}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+            
             if(user.id !== 0) {
                 db.collection("users").doc(String(user.id)).set({ name: user.first_name, last: Date.now() }, {merge: true});
-                db.collection("users").doc(String(user.id)).onSnapshot(doc => { if(doc.exists) document.getElementById('my-ad-stat').innerText = doc.data().adCount || 0; });
+                db.collection("users").doc(String(user.id)).onSnapshot(doc => { 
+                    if(doc.exists) {
+                        balance = doc.data().balance || 0;
+                        updateBalanceUI();
+                    }
+                });
             }
-            db.collection("settings").doc("config").onSnapshot(doc => { if(doc.exists()) globalReqAds = doc.data().reqAds || 3; });
+
             db.collection("pdfs").orderBy("date", "desc").onSnapshot(snap => { pdfs=[]; snap.forEach(doc => pdfs.push({k:doc.id, ...doc.data()})); renderPdfs('all'); });
+            db.collection("tasks").onSnapshot(snap => { tasks=[]; snap.forEach(doc => tasks.push({k:doc.id, ...doc.data()})); renderTasks(); });
             db.collection("notifications").orderBy("date", "desc").limit(1).onSnapshot(snap => {
                 const m = document.getElementById('home-marquee-text');
                 if(!snap.empty) { let n=snap.docs[0].data().text; m.innerText="📢 "+n+" 📢 "+n+" 📢 "+n; } else m.innerText="Aktif duyuru yok.";
@@ -369,36 +477,237 @@
                 document.getElementById('sb-list').innerHTML += `<div class="side-item" onclick="filter('${c.n}')"><i class="fa-solid ${c.i}"></i> ${c.n}</div>`;
                 if(document.getElementById('home-cat-grid').children.length < 6) document.getElementById('home-cat-grid').innerHTML += `<div class="cat-item" onclick="filter('${c.n}')"><div class="cat-icon"><i class="fa-solid ${c.i}"></i></div><div style="font-weight:600; font-size:14px;">${c.n}</div></div>`;
             });
-        };
+            
+            document.querySelectorAll('button, .btn, .nav-item, .side-item, .cat-item, .header-icon-btn').forEach(el => el.addEventListener('click', playClick));
+            initChat();
+        }
+
+        function updateBalanceUI() {
+            document.getElementById('home-balance').innerText = balance;
+            document.getElementById('lib-balance').innerText = balance;
+            document.getElementById('earn-balance').innerText = balance;
+            document.getElementById('profile-balance').innerText = balance;
+        }
 
         function go(viewId, el) {
             playClick(); 
-            // Tüm view class'lı elementleri gizle (display:none)
             document.querySelectorAll('.view').forEach(x => {
                 x.classList.remove('active');
+                // View değişirken scroll pozisyonunu sıfırlayabiliriz isterseniz, ama kullanıcı deneyimi için bırakıyorum.
             });
-            // İlgili view'i aktif yap (display:block)
-            document.getElementById('v-' + viewId).classList.add('active'); 
             
+            const activeView = document.getElementById('v-' + viewId);
+            activeView.classList.add('active'); 
+            
+            // Eğer PDF veya Chat sayfasıysa, scrollu en üste veya en alta atma mantığı:
+            if(viewId === 'chat') {
+                isChatActive = true;
+                scrollToBottom();
+            } else {
+                isChatActive = false;
+            }
+
             const headerActions = document.getElementById('header-actions');
             if(viewId === 'pdfs') headerActions.style.display = 'flex'; else headerActions.style.display = 'none';
             
-            if(el) { 
-                document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active')); 
-                el.classList.add('active'); 
-            } 
+            if(el) { document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active')); el.classList.add('active'); } 
             
-            isChatActive = (viewId === 'chat');
-            const chatBox = document.getElementById('chat-box-container');
-            if(isChatActive) { chatBox.style.display = 'flex'; scrollToBottom(); document.getElementById('chat-badge').style.display = 'none'; } else { chatBox.style.display = 'none'; }
+            document.getElementById('chat-box-container').style.display = isChatActive ? 'flex' : 'none';
+            if(isChatActive) { document.getElementById('chat-badge').style.display = 'none'; }
             
             if(viewId === 'home') showToast("Ana Sayfa");
             if(viewId === 'pdfs') showToast("Kütüphane");
+            if(viewId === 'earn') showToast("Jeton Kazan");
             if(viewId === 'chat') showToast("Sohbet Odası");
             if(viewId === 'profile') showToast("Profilim");
         }
 
-        // --- CHAT LOGIC ---
+        // --- TASK SYSTEM ---
+        function renderTasks() {
+            const list = document.getElementById('task-list');
+            list.innerHTML = '';
+            tasks.forEach(t => {
+                list.innerHTML += `
+                <div class="task-box">
+                    <div class="task-header">
+                        <div style="font-weight:700;">${t.name}</div>
+                        <div class="task-reward">+${t.reward} <i class="fa-solid fa-coins"></i></div>
+                    </div>
+                    <div style="font-size:12px; color:#666; margin-bottom:10px;">Linke git, kodu al ve buraya yapıştır.</div>
+                    <button class="btn" style="margin-bottom:10px;" onclick="openTaskLink('${t.url}')">Görevi Yap</button>
+                    <div class="code-input-area">
+                        <input type="text" class="inp" id="code-${t.k}" placeholder="Kodu yapıştır" style="margin-bottom:0;">
+                        <button class="btn btn-sec" style="width:auto;" onclick="submitTask('${t.k}', ${t.reward})">Onayla</button>
+                    </div>
+                </div>`;
+            });
+            if(tasks.length === 0) list.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa;">Aktif görev yok.</div>';
+        }
+
+        function openTaskLink(url) {
+            window.open(url, '_blank');
+        }
+
+        function submitTask(taskId, reward) {
+            const codeInput = document.getElementById(`code-${taskId}`);
+            const code = codeInput.value.trim();
+            if(!code) { showToast("Lütfen kodu girin!", "error"); return; }
+
+            try {
+                const decoded = atob(code);
+                const secret = "PDFKEY";
+                const expected = `${taskId}_${user.id}_${secret}`;
+                
+                if (decoded === expected) {
+                    const userRef = db.collection("users").doc(String(user.id));
+                    userRef.get().then(doc => {
+                        const userData = doc.data();
+                        const completed = userData.completedTasks || [];
+                        
+                        if(completed.includes(taskId)) {
+                            showToast("Bu görevi zaten yaptınız!", "error");
+                        } else {
+                            userRef.update({
+                                balance: firebase.firestore.FieldValue.increment(reward),
+                                completedTasks: firebase.firestore.FieldValue.arrayUnion(taskId)
+                            }).then(() => {
+                                showToast(`Tebrikler! ${reward} jeton kazandınız.`);
+                                codeInput.value = '';
+                                codeInput.disabled = true;
+                            });
+                        }
+                    });
+                } else {
+                    showToast("Hatalı kod!", "error");
+                }
+            } catch (e) {
+                showToast("Geçersiz kod formatı!", "error");
+            }
+        }
+
+        function watchTaddyAd() {
+            if(typeof show_10371617 === 'function') {
+                show_10371617().then(() => {
+                    db.collection("users").doc(String(user.id)).update({
+                        balance: firebase.firestore.FieldValue.increment(1)
+                    });
+                    showToast("+1 Jeton kazandın!");
+                }).catch(() => showToast("Reklam yüklenemedi.", "error"));
+            } else {
+                showToast("Reklam servisi hazır değil.", "error");
+            }
+        }
+
+        // --- ADMIN TASK MANAGER ---
+        let generatedTaskLink = "";
+        function generateTaskLink() {
+            const tempId = "task_" + Date.now();
+            generatedTaskLink = `${BASE_URL}/?task=${tempId}`;
+            document.getElementById('t-generated-link').innerText = generatedTaskLink;
+            document.getElementById('t-name').dataset.tempid = tempId;
+        }
+
+        function saveTask() {
+            const name = document.getElementById('t-name').value;
+            const reward = Number(document.getElementById('t-reward').value);
+            const shortUrl = document.getElementById('t-short-url').value;
+            const tempId = document.getElementById('t-name').dataset.tempid; 
+
+            if(!name || !reward || !shortUrl || !tempId) { showToast("Eksik bilgi!", "error"); return; }
+
+            db.collection("tasks").doc(tempId).set({
+                name: name,
+                reward: reward,
+                url: shortUrl, 
+                date: Date.now()
+            }).then(() => {
+                showToast("Görev Eklendi");
+                document.getElementById('t-name').value = '';
+                document.getElementById('t-reward').value = '';
+                document.getElementById('t-short-url').value = '';
+                document.getElementById('t-generated-link').innerText = '';
+                renderAdmTasks();
+            });
+        }
+
+        function renderAdmTasks() {
+            const div = document.getElementById('adm-task-list');
+            div.innerHTML = '';
+            tasks.forEach(t => {
+                div.innerHTML += `<div class="list-item"><div>${t.name} (${t.reward} Jeton)</div><button class="btn btn-dang" onclick="delTask('${t.k}')" style="padding:5px 10px;">Sil</button></div>`;
+            });
+        }
+        function delTask(id) { if(confirm("Silinsin mi?")) db.collection("tasks").doc(id).delete(); }
+
+        // --- PDF SYSTEM & COIN UNLOCK ---
+        function filter(c) { playClick(); toggleSidebar(false); document.getElementById('lib-title').innerText=c==='all'?'Tüm Kitaplar':c; renderPdfs(c); go('pdfs',document.querySelectorAll('.nav-item')[1]); }
+        function getPdfIcon(c) { let f=CATS.find(x=>x.n===c); return f?f.i:'fa-file-pdf'; }
+        function copyText(t) { const el=document.createElement('textarea'); el.value=t; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); showToast("Kopyalandı"); }
+        function isUnlocked(id) { return (JSON.parse(localStorage.getItem('unlocked_pdfs') || '[]')).includes(id); }
+        function setUnlocked(id) { let u=JSON.parse(localStorage.getItem('unlocked_pdfs') || '[]'); if(!u.includes(id)){u.push(id); localStorage.setItem('unlocked_pdfs', JSON.stringify(u));} }
+        
+        function renderPdfs(c) {
+            let list=document.getElementById('pdf-list'); list.innerHTML=''; let q=document.getElementById('search').value.toLowerCase();
+            let f=pdfs.filter(p=>(c==='all'||c==='Tümü'?true:p.cat.includes(c)) && p.name.toLowerCase().includes(q));
+            if(f.length===0){list.innerHTML='<div style="grid-column:1/-1; text-align:center; margin-top:40px; color:#94A3B8;">Sonuç yok.</div>';return;}
+            f.forEach(p=>{ 
+                let icon=getPdfIcon(p.cat.split(',')[0].trim())||'fa-file-pdf'; 
+                let lock=isUnlocked(p.k)?'fa-unlock':'fa-lock'; 
+                let col=isUnlocked(p.k)?'#10B981':'#CBD5E1'; 
+                list.innerHTML+=`
+                <div class="pdf-box" onclick="unlockPdf('${p.k}')">
+                    <div class="pdf-thumb"><i class="fa-solid ${icon}"></i></div>
+                    <div class="pdf-title">${p.name}</div>
+                    <div class="pdf-price"><i class="fa-solid fa-coins"></i> ${p.cost || 5}</div>
+                    <div class="pdf-info"><span><i class="fa-solid fa-download"></i> ${p.downloads||0}</span></div>
+                    <i class="fa-solid ${lock}" style="position:absolute; top:10px; right:10px; color:${col};"></i>
+                </div>`; 
+            });
+        }
+        function render() { renderPdfs('all'); }
+        
+        function unlockPdf(k){ 
+            playClick(); 
+            selPdf=pdfs.find(x=>x.k===k); 
+            if(isUnlocked(k)) {
+                copyText(selPdf.link);
+                return;
+            }
+            
+            const cost = parseInt(selPdf.cost) || 5;
+            document.getElementById('unlock-msg').innerText = `Bu kitabı indirmek için ${cost} jeton gerekiyor.`;
+            
+            const btn = document.getElementById('btn-unlock-pdf');
+            btn.onclick = () => processUnlock(selPdf, cost);
+            
+            openModal('m-unlock'); 
+        }
+
+        function processUnlock(pdf, cost) {
+            if (balance >= cost) {
+                db.collection("users").doc(String(user.id)).update({
+                    balance: firebase.firestore.FieldValue.increment(-cost)
+                }).then(() => {
+                    addToHistory(pdf);
+                    setUnlocked(pdf.k);
+                    db.collection("pdfs").doc(pdf.k).update({downloads:firebase.firestore.FieldValue.increment(1)});
+                    copyText(pdf.link);
+                    showToast("Kilit açıldı! Link kopyalandı.");
+                    closeM();
+                    renderPdfs('all');
+                });
+            } else {
+                showToast("Yetersiz jeton! Görev yaparak kazan.", "error");
+                closeM();
+                go('earn', document.querySelectorAll('.nav-item')[2]);
+            }
+        }
+
+        function addToHistory(p) { let h=JSON.parse(localStorage.getItem('pdf_history') || '[]'); h=h.filter(x=>x.n!==p.name); h.unshift({n:p.name,l:p.link,d:Date.now()}); if(h.length>20)h.pop(); localStorage.setItem('pdf_history', JSON.stringify(h)); }
+        function renderHistory() { let d=document.getElementById('history-list'); let h=JSON.parse(localStorage.getItem('pdf_history') || '[]'); d.innerHTML=''; h.forEach(i=>{d.innerHTML+=`<div class="list-item" onclick="copyText('${i.l}')"><div><b>${i.n}</b><br><small>${new Date(i.d).toLocaleDateString()}</small></div></div>`}); }
+        function clearHistory() { if(confirm("Temizlensin mi?")) { localStorage.removeItem('pdf_history'); renderHistory(); showToast("Temizlendi"); } }
+        
+        // --- CHAT ---
         function initChat() {
             db.collection("settings").doc("chat").onSnapshot(doc => {
                 const bar = document.getElementById('pinned-bar');
@@ -413,6 +722,12 @@
             db.collection("messages").orderBy("timestamp", "asc").limitToLast(50).onSnapshot(snap => {
                 const feed = document.getElementById('chat-feed');
                 if(feed.innerHTML.includes('Sohbet yükleniyor')) feed.innerHTML = '';
+                
+                if (snap.empty && feed.children.length === 0) {
+                    feed.innerHTML = '<div style="text-align:center; color:#ccc; margin-top:20px;">Henüz mesaj yok.</div>';
+                    return;
+                }
+
                 let unread = 0;
                 snap.docChanges().forEach(change => {
                     const m = change.doc.data(); const id = change.doc.id;
@@ -424,10 +739,15 @@
                     if (change.type === "modified") updateMessageTick(id, m);
                     if (change.type === "removed") { let el=document.getElementById('msg-'+id); if(el){ el.classList.add('deleting'); setTimeout(()=>el.remove(),400); } }
                 });
+                
                 if(!isChatActive && unread > 0) { const b=document.getElementById('chat-badge'); let cur=parseInt(b.innerText)||0; let tot=cur+unread; b.innerText=tot>99?'99+':'+'+tot; b.style.display='flex'; }
                 if(isChatActive) scrollToBottom();
+            }, (error) => {
+                console.error("Chat Error:", error);
+                document.getElementById('chat-feed').innerHTML = '<div style="text-align:center; color:red;">Sohbet yüklenemedi.</div>';
             });
         }
+
         function renderMessage(id, m) {
             const feed = document.getElementById('chat-feed'); const isMe = m.senderId === user.id; const isAdmin = ADMIN_IDS.includes(user.id);
             const time = new Date(m.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
@@ -438,105 +758,24 @@
         }
         function updateMessageTick(id, m) { const t=document.getElementById(`tick-${id}`); if(t && m.readBy.length>0){ t.classList.remove('unread'); t.classList.add('read'); } }
         function sendChat() { const i=document.getElementById('chat-msg-in'); const t=i.value.trim(); if(!t)return; for(let w of BAD_WORDS)if(new RegExp(`\\b${w}\\b`,'i').test(t)){showToast("Uygunsuz içerik!","error");return;} playMsgSound(); db.collection("messages").add({text:t,senderId:user.id,senderName:user.first_name,photo:user.photo_url||null,timestamp:Date.now(),readBy:[]}); i.value=''; scrollToBottom(); }
-        function deleteMsg(id) { if(confirm("Mesaj silinsin mi?")) db.collection("messages").doc(id).delete(); }
+        function deleteMsg(id) { if(confirm("Silinsin mi?")) db.collection("messages").doc(id).delete(); }
         function pinMsg(id, t) { if(confirm("Sabitlensin mi?")) { db.collection("settings").doc("chat").set({pinnedId:id,pinnedText:t},{merge:true}); showToast("Sabitlendi"); } }
         function unpinMsg(e) { e.stopPropagation(); if(confirm("Kaldırılsın mı?")) db.collection("settings").doc("chat").update({pinnedId:null,pinnedText:null}); }
         function jumpToPin() { if(!pinnedMsgId)return; const el=document.getElementById('msg-'+pinnedMsgId); if(el){el.scrollIntoView({behavior:"smooth",block:"center"}); el.style.transform="scale(1.1)"; setTimeout(()=>el.style.transform="scale(1)",500);} }
         function markAsRead(id) { db.collection("messages").doc(id).update({readBy:firebase.firestore.FieldValue.arrayUnion(user.id)}); }
-        function scrollToBottom() { const v=document.getElementById('v-chat'); setTimeout(()=>v.scrollTop=v.scrollHeight,100); }
+        
+        function scrollToBottom() { 
+            const v = document.getElementById('chat-feed'); 
+            setTimeout(() => v.scrollTop = v.scrollHeight, 100); 
+        }
 
-        // --- CORE & PDF ---
+        // --- ADMIN & MISC ---
         function toggleSidebar(o) { playClick(); if(o) { document.getElementById('sidebar').classList.add('open'); document.getElementById('sb-overlay').style.display='block'; } else { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sb-overlay').style.display='none'; } }
         function showToast(msg, type='success') { const t=document.createElement('div'); t.className='toast'; if(type==='error')t.classList.add('error'); t.innerHTML=msg; document.getElementById('toast-container').appendChild(t); setTimeout(()=>{t.classList.add('hiding');setTimeout(()=>t.remove(),400);},3000); }
-        function filter(c) { playClick(); toggleSidebar(false); document.getElementById('lib-title').innerText=c==='all'?'Tüm Kitaplar':c; renderPdfs(c); go('pdfs',document.querySelectorAll('.nav-item')[1]); }
-        function getPdfIcon(c) { let f=CATS.find(x=>x.n===c); return f?f.i:'fa-file-pdf'; }
-        function copyText(t) { const el=document.createElement('textarea'); el.value=t; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); showToast("Kopyalandı"); }
-        function isUnlocked(id) { return (JSON.parse(localStorage.getItem('unlocked_pdfs') || '[]')).includes(id); }
-        function setUnlocked(id) { let u=JSON.parse(localStorage.getItem('unlocked_pdfs') || '[]'); if(!u.includes(id)){u.push(id); localStorage.setItem('unlocked_pdfs', JSON.stringify(u));} }
-        function renderPdfs(c) {
-            let list=document.getElementById('pdf-list'); list.innerHTML=''; let q=document.getElementById('search').value.toLowerCase();
-            let f=pdfs.filter(p=>(c==='all'||c==='Tümü'?true:p.cat.includes(c)) && p.name.toLowerCase().includes(q));
-            if(f.length===0){list.innerHTML='<div style="grid-column:1/-1; text-align:center; margin-top:40px; color:#94A3B8;">Sonuç yok.</div>';return;}
-            f.forEach(p=>{ let icon=getPdfIcon(p.cat.split(',')[0].trim())||'fa-file-pdf'; let lock=isUnlocked(p.k)?'fa-unlock':'fa-lock'; let col=isUnlocked(p.k)?'#10B981':'#CBD5E1'; list.innerHTML+=`<div class="pdf-box" onclick="unlockPdf('${p.k}')"><div class="pdf-thumb"><i class="fa-solid ${icon}"></i></div><div class="pdf-title">${p.name}</div><div class="pdf-badge">${p.cat}</div><div class="pdf-info"><span><i class="fa-solid fa-download"></i> ${p.downloads||0}</span></div><i class="fa-solid ${lock}" style="position:absolute; top:10px; right:10px; color:${col};"></i></div>`; });
-        }
-        function render() { renderPdfs('all'); }
-        function unlockPdf(k){ playClick(); selPdf=pdfs.find(x=>x.k===k); currentAdStep=isUnlocked(k)?parseInt(selPdf.reqAds||globalReqAds):0; selPdf.finalReq=parseInt(selPdf.reqAds)||globalReqAds; updateUnlockUI(); openModal('m-unlock'); }
-        function updateUnlockUI(){
-            let r=selPdf.finalReq; if(isUnlocked(selPdf.k))currentAdStep=r; document.getElementById('prog-txt').innerText=`${currentAdStep}/${r}`; let btn=document.getElementById('btn-ad');
-            if(currentAdStep>=r){btn.innerHTML='LİNKİ KOPYALA'; btn.style.background='#10B981'; btn.onclick=()=>{playClick(); addToHistory(selPdf); setUnlocked(selPdf.k); db.collection("pdfs").doc(selPdf.k).update({downloads:firebase.firestore.FieldValue.increment(1)}); copyText(selPdf.link); closeM(); renderPdfs('all');};} else {btn.innerHTML='Reklam İzle'; btn.style.background=''; btn.onclick=watchAdSequence;}
-        }
-        function addToHistory(p) { let h=JSON.parse(localStorage.getItem('pdf_history') || '[]'); h=h.filter(x=>x.n!==p.name); h.unshift({n:p.name,l:p.link,d:Date.now()}); if(h.length>20)h.pop(); localStorage.setItem('pdf_history', JSON.stringify(h)); }
-        function renderHistory() { let d=document.getElementById('history-list'); let h=JSON.parse(localStorage.getItem('pdf_history') || '[]'); d.innerHTML=''; h.forEach(i=>{d.innerHTML+=`<div class="list-item" onclick="copyText('${i.l}')"><div><b>${i.n}</b><br><small>${new Date(i.d).toLocaleDateString()}</small></div></div>`}); }
-        function clearHistory() { if(confirm("Temizlensin mi?")) { localStorage.removeItem('pdf_history'); renderHistory(); showToast("Temizlendi"); } }
-        
-        // --- GELİŞMİŞ REKLAM YÖNETİCİSİ (Tek ID: 405739 / Yedek: 405783) ---
-        const AD_REWARDED_ID = '405739'; 
-        const AD_OTHER_ID = '405783'; 
-
-        async function loadAd() {
-            if (!window.initCdTma) {
-                console.error("Reklam scripti yüklenmedi.");
-                return null;
-            }
-            try {
-                console.log("Ödüllü reklam aranıyor...");
-                let showFn = await window.initCdTma({ id: AD_REWARDED_ID });
-                return showFn;
-            } catch (e) {
-                console.warn("Ödüllü bulunamadı, yedeğe geçiliyor...", e);
-                try {
-                    let showFn = await window.initCdTma({ id: AD_OTHER_ID });
-                    return showFn;
-                } catch (e2) {
-                    console.error("Hiçbir reklam bulunamadı.", e2);
-                    return null;
-                }
-            }
-        }
-
-        async function watchAdSequence(){ 
-            playClick(); 
-            const btn = document.getElementById('btn-ad');
-            btn.innerHTML = 'Yükleniyor...'; 
-            
-            const showFn = await loadAd();
-
-            if(showFn) {
-                showFn().then(() => {
-                    completeAdStep();
-                }).catch(e => {
-                    console.error(e);
-                    showToast("Reklam kapatıldı veya yüklenemedi.", "error");
-                    updateUnlockUI();
-                });
-            } else {
-                showToast("Şu an uygun reklam yok.", "error");
-                updateUnlockUI();
-            }
-        }
-
-        function completeAdStep() { 
-            currentAdStep++; 
-            db.collection("stats").doc("ads").set({count:firebase.firestore.FieldValue.increment(1)},{merge:true}); 
-            if(user.id!==0) db.collection("users").doc(String(user.id)).set({adCount:firebase.firestore.FieldValue.increment(1)},{merge:true}); 
-            updateUnlockUI(); 
-        }
-        
-        function loadStats() { db.collection("users").get().then(s=>document.getElementById('st-users').innerText=s.size); document.getElementById('st-pdfs').innerText=pdfs.length; db.collection("stats").doc("ads").onSnapshot(d=>{if(d.exists)document.getElementById('st-ads-total').innerText=d.data().count||0}); db.collection("users").where('last','>',Date.now()-(5*60*1000)).get().then(s=>document.getElementById('st-active').innerText=s.size); }
-        
-        // --- AUTO DETECT ---
         function autoDetect(val, type) {
             let nameInput = document.getElementById('ap-n');
-            if(type === 'link') {
-                try { 
-                    let decoded = decodeURIComponent(val.split('?')[0].split('/').pop()).replace(/\.pdf$/i,'').replace(/[_-]/g, ' '); 
-                    if(nameInput.value === '') nameInput.value = decoded; 
-                    detectCategory(decoded);
-                } catch(e){}
-            }
-            if(type === 'name') {
-                detectCategory(val);
-            }
+            if(type === 'link') { try { let decoded = decodeURIComponent(val.split('?')[0].split('/').pop()).replace(/\.pdf$/i,'').replace(/[_-]/g, ' '); if(nameInput.value === '') nameInput.value = decoded; detectCategory(decoded); } catch(e){} }
+            if(type === 'name') { detectCategory(val); }
         }
         function detectCategory(name) {
             const n = name.toLowerCase(); const catInput = document.getElementById('ap-c'); let found = '';
@@ -544,18 +783,50 @@
             if(n.includes('tyt')) found = found ? found + ', TYT' : 'TYT'; if(n.includes('ayt')) found = found ? found + ', AYT' : 'AYT';
             if(found) catInput.value = found;
         }
-
-        function openModal(id){ playClick(); document.querySelectorAll('.modal-overlay').forEach(x=>x.style.display='none'); document.getElementById(id).style.display='flex'; if(id==='m-reqs') renderRequests(); if(id==='m-pdf') { resetPdfForm(); renderAdmPdfs(''); } if(id==='m-users') renderUsers(''); if(id==='m-user-notifs') renderNotifications(); if(id==='m-add-notif') renderAdmNotifs(); }
-        function closeM(){ playClick(); document.querySelectorAll('.modal-overlay').forEach(x=>x.style.display='none'); }
         
-        function savePdf(){ 
-            const n=document.getElementById('ap-n').value, l=document.getElementById('ap-l').value, c=document.getElementById('ap-c').value, a=document.getElementById('ap-ads').value; 
-            if(!n||!l||!c) { showToast("Eksik bilgi!","error"); return; }
-            if (editingPdfId) { db.collection("pdfs").doc(editingPdfId).update({name:n, link:l, cat:c, reqAds:a?Number(a):null}).then(() => { showToast("PDF Güncellendi"); resetPdfForm(); renderAdmPdfs(''); }); } 
-            else { db.collection("pdfs").add({name:n, link:l, cat:c, reqAds:a?Number(a):null, date:Date.now(), downloads:0}).then(() => { showToast("PDF Eklendi"); resetPdfForm(); renderAdmPdfs(''); }); }
+        // Modal Control Functions with Animation
+        function openModal(id){ 
+            playClick(); 
+            // Close all active modals immediately first
+            document.querySelectorAll('.modal-overlay.active').forEach(overlay => {
+                overlay.classList.remove('active');
+                setTimeout(() => { overlay.style.display = 'none'; }, 200);
+            });
+
+            const modal = document.getElementById(id);
+            modal.style.display = 'flex';
+            // Slight delay to allow display:flex to apply before adding active class for transition
+            setTimeout(() => {
+                modal.classList.add('active');
+                modal.classList.remove('closing');
+            }, 10);
+
+            if(id==='m-reqs') renderRequests(); 
+            if(id==='m-pdf') { resetPdfForm(); renderAdmPdfs(''); } 
+            if(id==='m-users') renderUsers(''); 
+            if(id==='m-user-notifs') renderNotifications(); 
+            if(id==='m-add-notif') renderAdmNotifs(); 
+            if(id==='m-tasks') renderAdmTasks(); 
         }
-        function resetPdfForm() { editingPdfId = null; document.getElementById('ap-n').value = ''; document.getElementById('ap-l').value = ''; document.getElementById('ap-c').value = ''; document.getElementById('ap-ads').value = ''; document.getElementById('btn-save-pdf').innerText = 'Ekle'; document.getElementById('btn-save-pdf').classList.remove('btn-edit'); document.getElementById('pdf-modal-title').innerText = 'PDF Ekle'; document.getElementById('edit-cancel-box').style.display = 'none'; }
-        function editPdf(k) { const p = pdfs.find(x => x.k === k); if(!p) return; editingPdfId = k; document.getElementById('ap-n').value = p.name; document.getElementById('ap-l').value = p.link; document.getElementById('ap-c').value = p.cat; document.getElementById('ap-ads').value = p.reqAds || ''; document.getElementById('btn-save-pdf').innerText = 'Güncelle'; document.getElementById('btn-save-pdf').classList.add('btn-edit'); document.getElementById('pdf-modal-title').innerText = 'PDF Düzenle'; document.getElementById('edit-cancel-box').style.display = 'block'; document.querySelector('#m-pdf .modal-box').scrollTop = 0; }
+
+        function closeM(){ 
+            playClick(); 
+            const activeOverlays = document.querySelectorAll('.modal-overlay.active');
+            activeOverlays.forEach(overlay => {
+                overlay.classList.add('closing'); // Trigger close animation
+                overlay.classList.remove('active');
+                
+                // Wait for animation to finish then hide
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    overlay.classList.remove('closing');
+                }, 300); // 0.3s matches CSS transition
+            });
+        }
+
+        function savePdf(){ const n=document.getElementById('ap-n').value, l=document.getElementById('ap-l').value, c=document.getElementById('ap-c').value, a=document.getElementById('ap-cost').value; if(!n||!l||!c) { showToast("Eksik bilgi!","error"); return; } if (editingPdfId) { db.collection("pdfs").doc(editingPdfId).update({name:n, link:l, cat:c, cost:a?Number(a):5}).then(() => { showToast("Güncellendi"); resetPdfForm(); renderAdmPdfs(''); }); } else { db.collection("pdfs").add({name:n, link:l, cat:c, cost:a?Number(a):5, date:Date.now(), downloads:0}).then(() => { showToast("Eklendi"); resetPdfForm(); renderAdmPdfs(''); }); } }
+        function resetPdfForm() { editingPdfId = null; document.getElementById('ap-n').value = ''; document.getElementById('ap-l').value = ''; document.getElementById('ap-c').value = ''; document.getElementById('ap-cost').value = ''; document.getElementById('btn-save-pdf').innerText = 'Ekle'; document.getElementById('btn-save-pdf').classList.remove('btn-edit'); document.getElementById('pdf-modal-title').innerText = 'PDF Ekle'; document.getElementById('edit-cancel-box').style.display = 'none'; }
+        function editPdf(k) { const p = pdfs.find(x => x.k === k); if(!p) return; editingPdfId = k; document.getElementById('ap-n').value = p.name; document.getElementById('ap-l').value = p.link; document.getElementById('ap-c').value = p.cat; document.getElementById('ap-cost').value = p.cost || 5; document.getElementById('btn-save-pdf').innerText = 'Güncelle'; document.getElementById('btn-save-pdf').classList.add('btn-edit'); document.getElementById('pdf-modal-title').innerText = 'PDF Düzenle'; document.getElementById('edit-cancel-box').style.display = 'block'; document.querySelector('#m-pdf .modal-box').scrollTop = 0; }
         function renderAdmPdfs(q){ let d=document.getElementById('adm-pdf-list'); d.innerHTML=''; pdfs.forEach(p=>{ if(p.name.toLowerCase().includes(q)) { d.innerHTML += `<div class="list-item"><div style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:5px;">${p.name}</div><div style="display:flex; gap:5px;"><button class="btn btn-edit" onclick="editPdf('${p.k}')" style="padding:5px 10px; font-size:12px;">Düzenle</button><button class="btn btn-dang" onclick="delPdf('${p.k}')" style="padding:5px 10px; font-size:12px;">Sil</button></div></div>`; } }); }
         function toggleAdmList() { const c=document.getElementById('adm-pdf-c'); const btn=document.getElementById('btn-toggle-list'); if(c.style.display==='none'){c.style.display='block'; btn.innerHTML='<i class="fa-solid fa-eye-slash"></i> Gizle'; renderAdmPdfs('');} else {c.style.display='none'; btn.innerHTML='<i class="fa-solid fa-list"></i> Listeyi Göster';} }
         function delPdf(k){ if(confirm("Silinsin mi?")) db.collection("pdfs").doc(k).delete().then(()=>showToast("Silindi")); }
@@ -567,6 +838,7 @@
         function sendReq(){ let t=document.getElementById('req-txt').value; if(t) db.collection("requests").add({book:t,name:user.first_name}).then(()=>{showToast("Gönderildi"); closeM();}); else showToast("Kitap adı giriniz!","error"); }
         function sendNotification(){ let t=document.getElementById('notif-txt').value; if(t) db.collection("notifications").add({text:t,date:Date.now()}).then(()=>{showToast("Yayınlandı"); renderAdmNotifs();}); else showToast("Boş bırakılamaz!","error"); }
         function renderNotifications(){ const l=document.getElementById('user-notif-list'); l.innerHTML='...'; db.collection("notifications").orderBy("date","desc").limit(10).get().then(s=>{ l.innerHTML=''; s.forEach(d=>{ l.innerHTML+=`<div class="notif-item"><small>${new Date(d.data().date).toLocaleDateString()}</small><br>${d.data().text}</div>`; }); }); }
+        function loadStats() { db.collection("users").get().then(s=>document.getElementById('st-users').innerText=s.size); }
     </script>
 </body>
 </html>
