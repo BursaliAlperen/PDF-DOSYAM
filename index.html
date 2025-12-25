@@ -57,7 +57,7 @@
             overflow-y: scroll !important;
             padding: 15px;
             padding-top: 70px;
-            padding-bottom: 250px;
+            padding-bottom: 180px; /* Mesajların input altında kalmaması için yeterli boşluk */
             display: flex;
             flex-direction: column;
             gap: 15px;
@@ -103,8 +103,8 @@
         .task-reward { background: #FFFBEB; color: var(--coin); padding: 5px 10px; border-radius: 20px; font-weight: 800; font-size: 12px; display: flex; align-items: center; gap: 5px; }
         .code-input-area { display: flex; gap: 5px; margin-top: 10px; }
 
-        /* NAV */
-        .nav-container { position: fixed; bottom: 35px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; z-index: 1000; }
+        /* NAV - AŞAĞI ALINDI */
+        .nav-container { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; z-index: 1000; }
         .nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-radius: 24px; display: flex; justify-content: space-around; padding: 14px; box-shadow: 0 20px 50px -10px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.6); }
         .nav-item { font-size: 24px; color: #CBD5E1; transition: 0.3s; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 14px; position: relative; }
         .nav-item.active { color: var(--primary); background: #EEF2FF; }
@@ -134,8 +134,25 @@
         .modal-overlay.active .modal-box { transform: scale(1); }
         .modal-overlay.closing .modal-box { transform: scale(0.8); }
 
-        /* CHAT BUBBLES */
-        .chat-input-box { position: fixed; bottom: 110px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid var(--border); padding: 10px; border-radius: 20px; display: none; align-items: center; gap: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); z-index: 2000; }
+        /* CHAT BUBBLES & INPUT (AŞAĞI ALINDI) */
+        .chat-input-box { 
+            position: fixed; 
+            bottom: 90px; /* Navigasyonun üstüne, daha aşağıya */
+            left: 50%; 
+            transform: translateX(-50%); 
+            width: 90%; 
+            max-width: 400px; 
+            background: rgba(255, 255, 255, 0.95); 
+            backdrop-filter: blur(10px); 
+            border: 1px solid var(--border); 
+            padding: 10px; 
+            border-radius: 20px; 
+            display: none; 
+            align-items: center; 
+            gap: 10px; 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1); 
+            z-index: 2000; 
+        }
         .chat-inp { flex: 1; border: none; background: transparent; padding: 8px; font-size: 14px; outline: none; }
         .chat-send-btn { width: 36px; height: 36px; background: var(--primary); color: white; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
         .msg-wrapper { display: flex; align-items: flex-end; gap: 8px; max-width: 85%; transition: all 0.3s ease; }
@@ -246,6 +263,15 @@
             <div id="task-list">
                 <div style="text-align:center; color:#999; padding:20px;">Görevler yükleniyor...</div>
             </div>
+            
+            <h4 style="margin:20px 0 10px 0;">Ekstra</h4>
+            <div class="task-box">
+                <div class="task-header">
+                    <div style="font-weight:700;">Reklam İzle</div>
+                    <div class="task-reward">+1 <i class="fa-solid fa-coins"></i></div>
+                </div>
+                <button class="btn btn-sec" onclick="watchTaddyAd()">Reklamı Başlat</button>
+            </div>
         </div>
 
         <!-- 4. CHAT VIEW -->
@@ -292,23 +318,11 @@
         <!-- 6. ADMIN VIEW -->
         <div id="v-admin" class="view">
             <h2 style="margin-bottom:20px; color:var(--primary);">Yönetici Paneli</h2>
-            
-            <!-- İSTATİSTİKLER -->
             <div class="stats-grid">
-                <div class="stats-box">
-                    <div class="stats-val" id="st-users">0</div>
-                    <div class="stats-label">Toplam Kullanıcı</div>
-                </div>
-                <div class="stats-box">
-                    <div class="stats-val" id="st-tasks-total">0</div>
-                    <div class="stats-label">Tamamlanan Görev</div>
-                </div>
-                <div class="stats-box">
-                    <div class="stats-val" id="st-active-users">0</div>
-                    <div class="stats-label">Anlık Aktif</div>
-                </div>
+                <div class="stats-box"><div class="stats-val" id="st-users">0</div><div class="stats-label">Toplam Kullanıcı</div></div>
+                <div class="stats-box"><div class="stats-val" id="st-tasks-total">0</div><div class="stats-label">Tamamlanan Görev</div></div>
+                <div class="stats-box"><div class="stats-val" id="st-active-users">0</div><div class="stats-label">Anlık Aktif</div></div>
             </div>
-
             <div style="display:grid; gap:10px;">
                 <button class="btn btn-sec" onclick="openModal('m-pdf')">PDF Yönet</button>
                 <button class="btn btn-sec" onclick="openModal('m-tasks')">Görev Yönet</button>
@@ -453,9 +467,12 @@
                 document.getElementById('app-container').style.display = 'none';
                 document.getElementById('v-code-page').style.display = 'flex';
                 
+                // Timestamp eklenerek kod her seferinde farklı olur
                 const secret = "PDFKEY";
                 const timestamp = Date.now(); 
                 const raw = `${taskId}_${user.id}_${secret}_${timestamp}`;
+                
+                // Basit ve güvenli kod üretimi
                 const code = btoa(raw).replace(/=/g,''); 
                 document.getElementById('generated-code').innerText = code;
             } else {
@@ -570,9 +587,11 @@
             if(!code) { showToast("Lütfen kodu girin!", "error"); return; }
 
             try {
+                // Kod Çözme: TaskID_UserID_Secret_Timestamp
                 const decoded = atob(code);
                 const parts = decoded.split('_');
                 
+                // TaskID ve UserID kontrolü
                 if (parts[0] === taskId && parts[1] == user.id && parts[2] === "PDFKEY") {
                     const userRef = db.collection("users").doc(String(user.id));
                     userRef.get().then(doc => {
@@ -856,8 +875,41 @@
             if(n.includes('tyt')) found = found ? found + ', TYT' : 'TYT'; if(n.includes('ayt')) found = found ? found + ', AYT' : 'AYT';
             if(found) catInput.value = found;
         }
-        function openModal(id){ playClick(); document.querySelectorAll('.modal-overlay').forEach(x=>x.style.display='none'); document.getElementById(id).style.display='flex'; if(id==='m-reqs') renderRequests(); if(id==='m-pdf') { resetPdfForm(); renderAdmPdfs(''); } if(id==='m-users') renderUsers(''); if(id==='m-user-notifs') renderNotifications(); if(id==='m-add-notif') renderAdmNotifs(); if(id==='m-tasks') renderAdmTasks(); }
-        function closeM(){ playClick(); document.querySelectorAll('.modal-overlay').forEach(x=>x.style.display='none'); }
+        function openModal(id){ 
+            playClick(); 
+            document.querySelectorAll('.modal-overlay.active').forEach(overlay => {
+                overlay.classList.remove('active');
+                setTimeout(() => { overlay.style.display = 'none'; }, 200);
+            });
+
+            const modal = document.getElementById(id);
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.add('active');
+                modal.classList.remove('closing');
+            }, 10);
+
+            if(id==='m-reqs') renderRequests(); 
+            if(id==='m-pdf') { resetPdfForm(); renderAdmPdfs(''); } 
+            if(id==='m-users') renderUsers(''); 
+            if(id==='m-user-notifs') renderNotifications(); 
+            if(id==='m-add-notif') renderAdmNotifs(); 
+            if(id==='m-tasks') { renderAdmTasks(); document.getElementById('adm-task-c').style.display='none'; document.getElementById('btn-toggle-tasks').innerHTML='<i class="fa-solid fa-list"></i> Listeyi Göster'; } 
+        }
+
+        function closeM(){ 
+            playClick(); 
+            const activeOverlays = document.querySelectorAll('.modal-overlay.active');
+            activeOverlays.forEach(overlay => {
+                overlay.classList.add('closing'); 
+                overlay.classList.remove('active');
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    overlay.classList.remove('closing');
+                }, 300);
+            });
+        }
+
         function savePdf(){ const n=document.getElementById('ap-n').value, l=document.getElementById('ap-l').value, c=document.getElementById('ap-c').value, a=document.getElementById('ap-cost').value; if(!n||!l||!c) { showToast("Eksik bilgi!","error"); return; } if (editingPdfId) { db.collection("pdfs").doc(editingPdfId).update({name:n, link:l, cat:c, cost:a?Number(a):5}).then(() => { showToast("Güncellendi"); resetPdfForm(); renderAdmPdfs(''); }); } else { db.collection("pdfs").add({name:n, link:l, cat:c, cost:a?Number(a):5, date:Date.now(), downloads:0}).then(() => { showToast("Eklendi"); resetPdfForm(); renderAdmPdfs(''); }); } }
         function resetPdfForm() { editingPdfId = null; document.getElementById('ap-n').value = ''; document.getElementById('ap-l').value = ''; document.getElementById('ap-c').value = ''; document.getElementById('ap-cost').value = ''; document.getElementById('btn-save-pdf').innerText = 'Ekle'; document.getElementById('btn-save-pdf').classList.remove('btn-edit'); document.getElementById('pdf-modal-title').innerText = 'PDF Ekle'; document.getElementById('edit-cancel-box').style.display = 'none'; }
         function editPdf(k) { const p = pdfs.find(x => x.k === k); if(!p) return; editingPdfId = k; document.getElementById('ap-n').value = p.name; document.getElementById('ap-l').value = p.link; document.getElementById('ap-c').value = p.cat; document.getElementById('ap-cost').value = p.cost || 5; document.getElementById('btn-save-pdf').innerText = 'Güncelle'; document.getElementById('btn-save-pdf').classList.add('btn-edit'); document.getElementById('pdf-modal-title').innerText = 'PDF Düzenle'; document.getElementById('edit-cancel-box').style.display = 'block'; document.querySelector('#m-pdf .modal-box').scrollTop = 0; }
