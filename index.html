@@ -57,7 +57,7 @@
             overflow-y: scroll !important;
             padding: 15px;
             padding-top: 70px;
-            padding-bottom: 100px;
+            padding-bottom: 250px;
             display: flex;
             flex-direction: column;
             gap: 15px;
@@ -66,21 +66,13 @@
             height: 100%;
         }
 
-        /* SPECIAL CODE PAGE VIEW (FIXED & RESPONSIVE) */
-        #v-code-page { 
-            display:none; 
-            position:fixed; top:0; left:0; width:100%; height:100%; 
-            background:white; z-index:9999; 
-            padding:20px; 
-            text-align:center; 
-            flex-direction:column; justify-content:center; align-items:center; 
-        }
+        /* SPECIAL CODE PAGE VIEW */
+        #v-code-page { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:9999; padding:20px; text-align:center; flex-direction:column; justify-content:center; align-items:center; }
         #generated-code {
             background:#F1F5F9; padding:20px; 
             border-radius:12px; font-size:20px; font-weight:800; letter-spacing:1px; 
             margin-bottom:20px; border:2px dashed var(--primary);
-            word-break: break-all; /* Taşmayı önler */
-            max-width: 90%; /* Ekran genişliğini aşmaz */
+            word-break: break-all; max-width: 90%;
         }
 
         /* TOAST */
@@ -254,15 +246,6 @@
             <div id="task-list">
                 <div style="text-align:center; color:#999; padding:20px;">Görevler yükleniyor...</div>
             </div>
-            
-            <h4 style="margin:20px 0 10px 0;">Ekstra</h4>
-            <div class="task-box">
-                <div class="task-header">
-                    <div style="font-weight:700;">Reklam İzle</div>
-                    <div class="task-reward">+1 <i class="fa-solid fa-coins"></i></div>
-                </div>
-                <button class="btn btn-sec" onclick="watchTaddyAd()">Reklamı Başlat</button>
-            </div>
         </div>
 
         <!-- 4. CHAT VIEW -->
@@ -374,7 +357,6 @@
                 <div style="background:#F1F5F9; padding:10px; border-radius:8px; margin-bottom:10px; text-align:left; font-size:12px;">
                     <b>Adım 1:</b> Bu linki oluştur:<br>
                     <button class="btn btn-sec" style="padding:5px; font-size:11px; margin-top:5px;" onclick="generateTaskLink()">Link Üret</button>
-                    <!-- Tıklayınca kopyalanan link -->
                     <div id="t-generated-link" style="margin-top:5px; word-break:break-all; font-family:monospace; color:blue; cursor:pointer;" onclick="copyText(this.innerText)"></div>
                 </div>
                 <input id="t-short-url" class="inp" placeholder="Kısaltılmış Linki Yapıştır">
@@ -471,12 +453,9 @@
                 document.getElementById('app-container').style.display = 'none';
                 document.getElementById('v-code-page').style.display = 'flex';
                 
-                // Timestamp eklenerek kod her seferinde farklı olur
                 const secret = "PDFKEY";
                 const timestamp = Date.now(); 
                 const raw = `${taskId}_${user.id}_${secret}_${timestamp}`;
-                
-                // Basit ve güvenli kod üretimi
                 const code = btoa(raw).replace(/=/g,''); 
                 document.getElementById('generated-code').innerText = code;
             } else {
@@ -591,32 +570,22 @@
             if(!code) { showToast("Lütfen kodu girin!", "error"); return; }
 
             try {
-                // Kod Çözme: TaskID_UserID_Secret_Timestamp
                 const decoded = atob(code);
                 const parts = decoded.split('_');
                 
-                // Temel doğrulama (TaskID ve UserID eşleşmeli)
                 if (parts[0] === taskId && parts[1] == user.id && parts[2] === "PDFKEY") {
-                    
-                    // Timestamp kontrolü (Opsiyonel: Kodun çok eski olup olmadığına bakılabilir)
-                    // Şimdilik sadece formatı doğruluyoruz.
-
                     const userRef = db.collection("users").doc(String(user.id));
                     userRef.get().then(doc => {
                         const userData = doc.data();
-                        
-                        // Kullanıcının daha önce kullandığı kodları saklıyoruz (Replay Attack Önlemi)
                         const usedCodes = userData.usedCodes || [];
                         
                         if(usedCodes.includes(code)) {
                             showToast("Bu kod daha önce kullanılmış!", "error");
                         } else {
-                            // Ödülü ver ve kodu kullanılanlar listesine ekle
                             userRef.update({
                                 balance: firebase.firestore.FieldValue.increment(reward),
                                 usedCodes: firebase.firestore.FieldValue.arrayUnion(code)
                             }).then(() => {
-                                // İstatistik güncelle
                                 db.collection("stats").doc("tasks").set({count: firebase.firestore.FieldValue.increment(1)}, {merge:true});
                                 showToast(`Tebrikler! ${reward} jeton kazandınız.`);
                                 codeInput.value = '';
@@ -749,7 +718,14 @@
                 </div>`;
             });
         }
-        function delTask(id) { if(confirm("Silinsin mi?")) db.collection("tasks").doc(id).delete(); }
+        function delTask(id) { 
+            if(confirm("Bu görevi silmek istediğinize emin misiniz?")) {
+                db.collection("tasks").doc(id).delete().then(() => {
+                    showToast("Görev Silindi");
+                    renderAdmTasks();
+                });
+            } 
+        }
 
         // --- PDF SYSTEM ---
         function filter(c) { playClick(); toggleSidebar(false); document.getElementById('lib-title').innerText=c==='all'?'Tüm Kitaplar':c; renderPdfs(c); go('pdfs',document.querySelectorAll('.nav-item')[1]); }
@@ -864,11 +840,7 @@
         function unpinMsg(e) { e.stopPropagation(); if(confirm("Kaldırılsın mı?")) db.collection("settings").doc("chat").update({pinnedId:null,pinnedText:null}); }
         function jumpToPin() { if(!pinnedMsgId)return; const el=document.getElementById('msg-'+pinnedMsgId); if(el){el.scrollIntoView({behavior:"smooth",block:"center"}); el.style.transform="scale(1.1)"; setTimeout(()=>el.style.transform="scale(1)",500);} }
         function markAsRead(id) { db.collection("messages").doc(id).update({readBy:firebase.firestore.FieldValue.arrayUnion(user.id)}); }
-        
-        function scrollToBottom() { 
-            const v = document.getElementById('chat-feed'); 
-            if(v) v.scrollTop = v.scrollHeight; 
-        }
+        function scrollToBottom() { const v=document.getElementById('v-chat'); setTimeout(()=>v.scrollTop=v.scrollHeight,100); }
 
         // --- ADMIN & MISC ---
         function toggleSidebar(o) { playClick(); if(o) { document.getElementById('sidebar').classList.add('open'); document.getElementById('sb-overlay').style.display='block'; } else { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sb-overlay').style.display='none'; } }
@@ -884,42 +856,8 @@
             if(n.includes('tyt')) found = found ? found + ', TYT' : 'TYT'; if(n.includes('ayt')) found = found ? found + ', AYT' : 'AYT';
             if(found) catInput.value = found;
         }
-        
-        function openModal(id){ 
-            playClick(); 
-            document.querySelectorAll('.modal-overlay.active').forEach(overlay => {
-                overlay.classList.remove('active');
-                setTimeout(() => { overlay.style.display = 'none'; }, 200);
-            });
-
-            const modal = document.getElementById(id);
-            modal.style.display = 'flex';
-            setTimeout(() => {
-                modal.classList.add('active');
-                modal.classList.remove('closing');
-            }, 10);
-
-            if(id==='m-reqs') renderRequests(); 
-            if(id==='m-pdf') { resetPdfForm(); renderAdmPdfs(''); } 
-            if(id==='m-users') renderUsers(''); 
-            if(id==='m-user-notifs') renderNotifications(); 
-            if(id==='m-add-notif') renderAdmNotifs(); 
-            if(id==='m-tasks') { renderAdmTasks(); document.getElementById('adm-task-c').style.display='none'; document.getElementById('btn-toggle-tasks').innerHTML='<i class="fa-solid fa-list"></i> Listeyi Göster'; } 
-        }
-
-        function closeM(){ 
-            playClick(); 
-            const activeOverlays = document.querySelectorAll('.modal-overlay.active');
-            activeOverlays.forEach(overlay => {
-                overlay.classList.add('closing'); 
-                overlay.classList.remove('active');
-                setTimeout(() => {
-                    overlay.style.display = 'none';
-                    overlay.classList.remove('closing');
-                }, 300);
-            });
-        }
-
+        function openModal(id){ playClick(); document.querySelectorAll('.modal-overlay').forEach(x=>x.style.display='none'); document.getElementById(id).style.display='flex'; if(id==='m-reqs') renderRequests(); if(id==='m-pdf') { resetPdfForm(); renderAdmPdfs(''); } if(id==='m-users') renderUsers(''); if(id==='m-user-notifs') renderNotifications(); if(id==='m-add-notif') renderAdmNotifs(); if(id==='m-tasks') renderAdmTasks(); }
+        function closeM(){ playClick(); document.querySelectorAll('.modal-overlay').forEach(x=>x.style.display='none'); }
         function savePdf(){ const n=document.getElementById('ap-n').value, l=document.getElementById('ap-l').value, c=document.getElementById('ap-c').value, a=document.getElementById('ap-cost').value; if(!n||!l||!c) { showToast("Eksik bilgi!","error"); return; } if (editingPdfId) { db.collection("pdfs").doc(editingPdfId).update({name:n, link:l, cat:c, cost:a?Number(a):5}).then(() => { showToast("Güncellendi"); resetPdfForm(); renderAdmPdfs(''); }); } else { db.collection("pdfs").add({name:n, link:l, cat:c, cost:a?Number(a):5, date:Date.now(), downloads:0}).then(() => { showToast("Eklendi"); resetPdfForm(); renderAdmPdfs(''); }); } }
         function resetPdfForm() { editingPdfId = null; document.getElementById('ap-n').value = ''; document.getElementById('ap-l').value = ''; document.getElementById('ap-c').value = ''; document.getElementById('ap-cost').value = ''; document.getElementById('btn-save-pdf').innerText = 'Ekle'; document.getElementById('btn-save-pdf').classList.remove('btn-edit'); document.getElementById('pdf-modal-title').innerText = 'PDF Ekle'; document.getElementById('edit-cancel-box').style.display = 'none'; }
         function editPdf(k) { const p = pdfs.find(x => x.k === k); if(!p) return; editingPdfId = k; document.getElementById('ap-n').value = p.name; document.getElementById('ap-l').value = p.link; document.getElementById('ap-c').value = p.cat; document.getElementById('ap-cost').value = p.cost || 5; document.getElementById('btn-save-pdf').innerText = 'Güncelle'; document.getElementById('btn-save-pdf').classList.add('btn-edit'); document.getElementById('pdf-modal-title').innerText = 'PDF Düzenle'; document.getElementById('edit-cancel-box').style.display = 'block'; document.querySelector('#m-pdf .modal-box').scrollTop = 0; }
@@ -934,12 +872,7 @@
         function sendReq(){ let t=document.getElementById('req-txt').value; if(t) db.collection("requests").add({book:t,name:user.first_name}).then(()=>{showToast("Gönderildi"); closeM();}); else showToast("Kitap adı giriniz!","error"); }
         function sendNotification(){ let t=document.getElementById('notif-txt').value; if(t) db.collection("notifications").add({text:t,date:Date.now()}).then(()=>{showToast("Yayınlandı"); renderAdmNotifs();}); else showToast("Boş bırakılamaz!","error"); }
         function renderNotifications(){ const l=document.getElementById('user-notif-list'); l.innerHTML='...'; db.collection("notifications").orderBy("date","desc").limit(10).get().then(s=>{ l.innerHTML=''; s.forEach(d=>{ l.innerHTML+=`<div class="notif-item"><small>${new Date(d.data().date).toLocaleDateString()}</small><br>${d.data().text}</div>`; }); }); }
-        function loadStats() { 
-            db.collection("users").get().then(s=>document.getElementById('st-users').innerText=s.size); 
-            db.collection("stats").doc("tasks").onSnapshot(d=>{if(d.exists)document.getElementById('st-tasks-total').innerText=d.data().count||0});
-            const fiveMinAgo = Date.now() - (5 * 60 * 1000);
-            db.collection("users").where('last', '>', fiveMinAgo).get().then(s => { document.getElementById('st-active-users').innerText = s.size; });
-        }
+        function loadStats() { db.collection("users").get().then(s=>document.getElementById('st-users').innerText=s.size); db.collection("stats").doc("tasks").onSnapshot(d=>{if(d.exists)document.getElementById('st-tasks-total').innerText=d.data().count||0}); const fiveMinAgo = Date.now() - (5 * 60 * 1000); db.collection("users").where('last', '>', fiveMinAgo).get().then(s => { document.getElementById('st-active-users').innerText = s.size; }); }
     </script>
 </body>
 </html>
